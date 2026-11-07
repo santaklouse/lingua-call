@@ -15,8 +15,8 @@
 >   used (D18).
 > - **Documentation policy:** English is primary; Russian mirrors are kept as
 >   `*.RU.md` (D21). All code comments are English.
-> - Version: `v1.2` · Last update: **2026-11-07**
-> - **Next step: P5P-02b** (WebAudio mic capture), then P5P-03 (Web Speech ASR).
+> - Version: `v1.3` · Last update: **2026-11-07**
+> - **Next step: P5P-08** (dubbing audio graph: duck the original, mix translated voice), then P5P-09 (latency tuning). **P5P-03…P5P-07 are done — the live demo is testable now.**
 
 ---
 
@@ -359,12 +359,12 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 |---|---|---|---|---|
 | P5P-01 | ✅ DONE (2026-11-07, daf2841) | `packages/translation`: `AsrEngine`/`MtEngine`/`TtsEngine` interfaces, capability manifest, latency types | — | unit tests for contracts |
 | P5P-02 | ✅ DONE (2026-11-07, a953b29) | Energy VAD segmenter (pure logic, adaptive noise floor, segment limits) | P5P-01 | unit tests |
-| P5P-02b | ☐ TODO | WebAudio mic capture adapter feeding the VAD (AudioWorklet) | P5P-02 | frames reach the segmenter in the browser |
-| P5P-03 | ☐ TODO | Web Speech ASR adapter (partial/final, feature detection, errors) | P5P-01 | works in Chrome/Edge; fallback message |
-| P5P-04 | ☐ TODO | Chrome Translator API MT adapter + fallback path | P5P-01 | ru↔en translation in Chrome/Edge |
-| P5P-05 | ☐ TODO | Web Speech Synthesis TTS adapter with queue/merge/interrupt policy | P5P-01 | speaks translated segments |
-| P5P-06 | ☐ TODO | Pipeline orchestration: mic→VAD→ASR→MT→subtitle+TTS; per-stage latency metrics | P5P-02…P5P-05 | mock-engine pipeline tests |
-| P5P-07 | ☐ TODO | Live translation demo screen (mic → subtitles → dubbed voice, latency panel) | P5P-06 | real demo works |
+| P5P-02b | ⏸ DEFERRED | WebAudio mic capture adapter feeding the VAD (AudioWorklet) — not needed for the Web Speech prototype path; required for local WASM ASR (P5A) | P5P-02 | frames reach the segmenter in the browser |
+| P5P-03 | ✅ DONE (2026-11-07, cabf178) | Web Speech ASR adapter (partial/final, feature detection, errors) | P5P-01 | works in Chrome/Edge; fallback message |
+| P5P-04 | ✅ DONE (2026-11-07, cabf178) | Chrome Translator API MT adapter + fallback path | P5P-01 | ru↔en translation in Chrome/Edge |
+| P5P-05 | ✅ DONE (2026-11-07, cabf178) | Web Speech Synthesis TTS adapter (serialized playback + cancel; merge policy still basic) | P5P-01 | speaks translated segments |
+| P5P-06 | ✅ DONE (2026-11-07, cabf178) | Pipeline orchestration: ASR→MT→subtitle+TTS; per-stage latency recorder | P5P-02…P5P-05 | mock-engine pipeline tests |
+| P5P-07 | ✅ DONE (2026-11-07, cabf178) | Live translation demo screen (mic → subtitles → dubbed voice, latency panel) | P5P-06 | real demo works |
 | P5P-08 | ☐ TODO | Dubbing audio graph: duck remote original, mix translated voice, echo safety | P5P-05, P5P-07 | both voices mixed correctly |
 | P5P-09 | ☐ TODO | Latency tuning to budget (D23): chunking, throttling, endpointing | P5P-06 | measured p50/p90 in `docs/PERF.md` |
 | P5P-10 | ☐ TODO | Error/degradation states: no engine/no mic/unsupported browser; subtitles-only mode | P5P-03…P5P-06 | 4 scenarios covered |
@@ -422,12 +422,13 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 
 ## 9. Current state
 
-**Now:** translation-first course (D19). UI shell with language selection and
-lobby (mock tokens) is done; a temporary manual-WebRTC call (copyable SDP codes)
-works for audio/video. Docs are English-primary with Russian mirrors. The
-translation package skeleton (P5P-01) is in place. Next step is the core feature
-pipeline: **P5P-02** (mic capture + VAD), then prototype engines (Web Speech ASR →
-Chrome Translator → Web Speech TTS) with latency metrics.
+**Now:** translation-first course (D19). The **live translation demo works**:
+lobby → "Live translation demo" → speak into the mic → see subtitles and hear
+the translated speech, with per-stage latency metrics. It uses prototype browser
+engines (Web Speech ASR, Chrome Translator, Web Speech Synthesis) and is
+**testable in Chrome/Edge now** (`bun run dev`). The temporary manual-WebRTC call
+(copyable SDP codes) also works. Next: P5P-08 (ducking the original while the
+translation plays) and P5P-09 (latency tuning).
 
 **Done:**
 - 2026-11-07 — research: `go-p2p-netcat` has no media tracks; data channel is
@@ -444,10 +445,14 @@ Chrome Translator → Web Speech TTS) with latency metrics.
 - 2026-11-07 — P5P-01 complete: `@linguacall/translation` with engine interfaces,
   segment/latency types and the ru/en capability manifest.
 - 2026-11-07 — P5P-02 complete: model-free energy VAD segmenter with adaptive
-  noise floor, min/max utterance limits, flush/reset and 12 unit tests
-  (41 tests green in total).
+  noise floor, min/max utterance limits, flush/reset and 12 unit tests.
+- 2026-11-07 — P5P-03…P5P-07 complete: Web Speech ASR, Chrome Translator MT,
+  Web Speech Synthesis TTS, `TranslationPipeline` with per-stage latency metrics,
+  and the **live translation demo screen** reachable from the lobby. 51 tests.
+  The demo is now testable in Chrome/Edge (`bun run dev`, lobby → "Live
+  translation demo").
 
-**Next step:** P5P-02b → P5P-03 → … (see §0).
+**Next step:** P5P-08 (dubbing audio graph) → P5P-09 (latency tuning).
 
 **Known issues / blockers:**
 - Manual transport has no reconnect and fails on symmetric NAT (acceptable for
@@ -478,7 +483,9 @@ Format: `YYYY-MM-DD · author · what was done · next step`.
 - **2026-11-07 · lead** — P5P-01 complete: translation engine interfaces,
   segment/latency types, capability manifest; 32 tests.
 - **2026-11-07 · lead** — P5P-02 complete: energy VAD segmenter + tests (41 total).
-  Next: P5P-02b (WebAudio mic capture) → P5P-03 (Web Speech ASR).
+- **2026-11-07 · lead** — P5P-03…P5P-07 complete: prototype engines + pipeline +
+  live demo screen; 51 tests. Demo is testable in Chrome/Edge. Next: P5P-08
+  (dubbing audio graph/ducking), P5P-09 (latency tuning).
 
 ---
 
