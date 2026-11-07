@@ -15,6 +15,7 @@ const DEFAULT_ICE_SERVERS: RTCIceServer[] = [
 ];
 
 const ICE_GATHERING_TIMEOUT_MS = 4_000;
+const CHANNEL_LABEL = 'linguacall-v1';
 
 export type ManualCallErrorCode = 'invalid-code' | 'media' | 'connection';
 
@@ -86,22 +87,31 @@ export type CallerSession = {
   pc: RTCPeerConnection;
   localStream: MediaStream;
   offerCode: string;
+  /** Data channel used for hello/subtitle messages (resolved once created). */
+  channel: Promise<RTCDataChannel>;
 };
 
 export async function createCallerSession(): Promise<CallerSession> {
   const localStream = await acquireUserMedia();
   const pc = newPeerConnection();
   attachLocalTracks(pc, localStream);
+  const channel = pc.createDataChannel(CHANNEL_LABEL, { ordered: true });
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
   await waitForIceGathering(pc);
-  return { pc, localStream, offerCode: encodeSdpCode(localSdp(pc, offer.sdp ?? '')) };
+  return {
+    pc,
+    localStream,
+    channel: Promise.resolve(channel),
+    offerCode: encodeSdpCode(localSdp(pc, offer.sdp ?? '')),
+  };
 }
 
 export type CalleeSession = {
   pc: RTCPeerConnection;
   localStream: MediaStream;
   answerCode: string;
+  channel: Promise<RTCDataChannel>;
 };
 
 export async function createCalleeSession(offerCode: string): Promise<CalleeSession> {
@@ -111,11 +121,41 @@ export async function createCalleeSession(offerCode: string): Promise<CalleeSess
   const localStream = await acquireUserMedia();
   const pc = newPeerConnection();
   attachLocalTracks(pc, localStream);
+
+  const channel = new Promise<RTCDataChannel>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new ManualCallError('connection', 'Data channel timeout')), 8_000);
+    pc.addEventListener('datachannel', (event: RTCDataChannelEvent) => {
+      if (event.channel.label !== CHANNEL_LABEL) return;
+      clearTimeout(timer);
+      resolve(event.channel);
+    });
+  });
+
   await pc.setRemoteDescription({ type: 'offer', sdp: decoded.sdp });
   const answer = await pc.createAnswer();
   await pc.setLocalDescription(answer);
   await waitForIceGathering(pc);
-  return { pc, localStream, answerCode: encodeSdpCode(localSdp(pc, answer.sdp ?? '')) };
+  return { pc, localStream, channel, answerCode: encodeSdpCode(localSdp(pc, answer.sdp ?? '')) };
+}
+
+/** Resolves when the data channel is open (or rejects after the timeout). */
+export function waitForChannelOpen(channel: RTCDataChannel, timeoutMs = 8_000): Promise<void> {
+  if (channel.readyState === 'open') return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new ManualCallError('connection', 'Data channel did not open'));
+    }, timeoutMs);
+    const onOpen = () => {
+      cleanup();
+      resolve();
+    };
+    const cleanup = () => {
+      clearTimeout(timer);
+      channel.removeEventListener('open', onOpen);
+    };
+    channel.addEventListener('open', onOpen);
+  });
 }
 
 export async function acceptAnswerCode(pc: RTCPeerConnection, answerCode: string): Promise<void> {

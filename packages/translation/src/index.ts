@@ -23,3 +23,5 @@ export { EnergyVadSegmenter, frameRms } from './vad';
 export type { VadEvent, VadOptions } from './vad';
 export { GenderEstimator, estimatePitchHz } from './voice';
 export type { GenderEstimatorOptions, PitchOptions, VoiceGender } from './voice';
+export { decodeCallMessage, encodeCallMessage } from './call-protocol';
+export type { CallMessage, HelloMessage, SubtitleMessage } from './call-protocol';

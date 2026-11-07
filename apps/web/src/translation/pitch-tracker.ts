@@ -6,18 +6,23 @@ export type PitchTracker = {
   stop(): void;
 };
 
+type PitchTrackerOptions = {
+  /** Stop the stream tracks when the tracker stops (true for a mic we own). */
+  stopTracks?: boolean;
+};
+
 /**
- * Estimates the speaker's gender from the microphone signal in parallel with
- * speech recognition. Used to pick a TTS voice that matches the speaker.
+ * Estimates speaker gender from any audio stream (microphone or remote peer) in
+ * parallel with speech recognition. Used to pick a matching TTS voice.
  *
- * Disables echo cancellation/noise suppression/AGC so the pitch is not distorted.
+ * Disables echo cancellation/noise suppression/AGC on the mic path so pitch is
+ * not distorted; remote streams are analyzed as-is.
  */
-export async function startMicPitchTracker(
+export async function startStreamPitchTracker(
+  stream: MediaStream,
   onGender: (gender: VoiceGender) => void,
+  options: PitchTrackerOptions = {},
 ): Promise<PitchTracker> {
-  const stream = await navigator.mediaDevices.getUserMedia({
-    audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
-  });
   const AudioContextCtor =
     globalThis.AudioContext ??
     (globalThis as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -47,8 +52,22 @@ export async function startMicPitchTracker(
     gender: () => current,
     stop() {
       clearInterval(timer);
-      for (const track of stream.getTracks()) track.stop();
+      source.disconnect();
+      analyser.disconnect();
+      if (options.stopTracks === true) {
+        for (const track of stream.getTracks()) track.stop();
+      }
       void context.close();
     },
   };
+}
+
+/** Mic-specific wrapper: requests a raw audio stream and stops it on close. */
+export async function startMicPitchTracker(
+  onGender: (gender: VoiceGender) => void,
+): Promise<PitchTracker> {
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+  });
+  return startStreamPitchTracker(stream, onGender, { stopTracks: true });
 }

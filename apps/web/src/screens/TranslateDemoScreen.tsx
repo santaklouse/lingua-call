@@ -21,8 +21,9 @@ import {
   createWebSpeechTts,
   isWebSpeechTtsSupported,
 } from '../translation/engines/web-speech-tts';
-import { startMicPitchTracker } from '../translation/mic-pitch';
-import type { PitchTracker } from '../translation/mic-pitch';
+import { startMicPitchTracker } from '../translation/pitch-tracker';
+import type { PitchTracker } from '../translation/pitch-tracker';
+import { otherLanguage } from '../translation/languages';
 
 const STAGES = ['asr', 'mt', 'tts', 'e2e'] as const;
 const STAGE_LABELS: Record<(typeof STAGES)[number], MessageKey> = {
@@ -55,10 +56,6 @@ function createNoopTts(): TtsEngine {
     speak: async () => {},
     cancel: () => {},
   };
-}
-
-function otherLanguage(language: Language): Language {
-  return language === 'ru' ? 'en' : 'ru';
 }
 
 export function TranslateDemoScreen() {
