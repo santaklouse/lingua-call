@@ -49,5 +49,8 @@ bun run build
 
 - Go: `/opt/homebrew/bin/go` (не `/usr/local/bin/go` — там старый Go 1.13).
 - `scripts/check-prereq.mjs` проверяет Bun/Go/git.
+- Если `bun install` в песочнице падает с `EPERM` tempdir, запускай:
+  `BUN_INSTALL_CACHE_DIR="$PWD/.bun-cache" TMPDIR="$PWD/.tmp" bun install`
+  (каталоги уже в `.gitignore`).
 - Публичные Nostr/WebTorrent signaling и STUN — бесплатные, но внешние;
   self-hosted замена — задел на будущее.
