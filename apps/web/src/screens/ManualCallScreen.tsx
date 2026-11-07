@@ -141,6 +141,10 @@ export function ManualCallScreen() {
   useEffect(() => loggerRef.current.subscribe(setLogs), []);
 
   useEffect(() => {
+    log('info', `Call screen ready: origin=${window.location.origin} secureContext=${String(window.isSecureContext)}`);
+  }, [log]);
+
+  useEffect(() => {
     peerLanguageRef.current = peerLanguage;
   }, [peerLanguage]);
 
@@ -212,6 +216,7 @@ export function ManualCallScreen() {
 
       channelRef.current = channel;
       log('info', 'Data channel open');
+      setSessionState('connected');
       if (remoteStream === null) {
         const tracks = pcRef.current?.getReceivers().map((receiver) => receiver.track) ?? [];
         const liveTracks = tracks.filter((track) => track.readyState === 'live');
@@ -311,19 +316,46 @@ export function ManualCallScreen() {
         'info',
         `Media: ${session.localStream.getTracks().map((track) => track.kind).join(', ') || 'none'}`,
       );
+      const localCandidates = (session.pc.localDescription?.sdp.match(/a=candidate/g) ?? []).length;
+      log(
+        'info',
+        `Peer connection: state=${session.pc.connectionState} ice=${session.pc.iceConnectionState} localCandidates=${localCandidates}`,
+      );
+      session.pc.addEventListener('iceconnectionstatechange', () => {
+        log('info', `ICE state: ${session.pc.iceConnectionState} (gathering=${session.pc.iceGatheringState})`);
+      });
       session.pc.addEventListener('connectionstatechange', () => {
         const pcState = session.pc.connectionState;
-        log('info', `Connection: ${pcState}`);
+        log('info', `Connection: ${pcState} (ice=${session.pc.iceConnectionState})`);
         if (pcState === 'connected') {
           setSessionState('connected');
-        } else if (pcState === 'failed' || pcState === 'disconnected') {
+        } else if (pcState === 'failed') {
+          setSessionState('waiting');
+          setError(t('manual.connectionError'));
+        } else if (pcState === 'disconnected') {
           setSessionState('waiting');
         }
       });
+
+      // Watchdog: surface a clear error instead of an endless "Waiting" state.
+      window.setTimeout(() => {
+        const pc = pcRef.current;
+        if (pc === null || pc === session.pc) {
+          if (pc !== null && pc.connectionState === 'connected') return;
+          if (pc === null || pc.connectionState === 'connecting' || pc.connectionState === 'new') {
+            log(
+              'error',
+              `Connection still not established after 20s (state=${pc?.connectionState ?? 'none'}, ice=${pc?.iceConnectionState ?? 'none'})`,
+            );
+            setError(t('manual.connectionError'));
+          }
+        }
+      }, 20_000);
       session.pc.addEventListener('track', (event: RTCTrackEvent) => {
         const [stream] = event.streams;
         if (stream !== undefined) {
           setRemoteStream(stream);
+          setSessionState('connected');
           log('info', 'Remote media received');
         }
       });
@@ -623,16 +655,18 @@ export function ManualCallScreen() {
   };
 
   const latestPeerSubtitle = [...subtitles].reverse().find((item) => item.direction === 'peer');
+  const connected = sessionState === 'connected' || remoteStream !== null;
+  const effectiveState: SessionState = connected ? 'connected' : sessionState;
   const modeLabel =
-    sessionState === 'connected'
+    effectiveState === 'connected'
       ? t('call.modeConnected')
-      : sessionState === 'waiting'
+      : effectiveState === 'waiting'
         ? t('call.modeWaiting')
-        : sessionState === 'preparing'
+        : effectiveState === 'preparing'
           ? t('call.modePreparing')
           : t('translate.idle');
   const modeTone =
-    sessionState === 'connected' ? 'success' : sessionState === 'idle' ? 'neutral' : 'warning';
+    effectiveState === 'connected' ? 'success' : effectiveState === 'idle' ? 'neutral' : 'warning';
 
   const showStageCall = mode !== null;
 

@@ -53,6 +53,13 @@ Cloudflare does not need access to your local network.
    `CLOUDFLARE_TUNNEL_TOKEN` for the compose file.
 6. Keep the page open: the next step adds a public hostname.
 
+
+> **Cross-device quick calls:** the compose stack includes a self-hosted
+> WebSocket signaling service (`signal`). nginx proxies it at `/signal` on the
+> same hostname, so the "Quick test" room code works between different devices
+> and browsers — no extra Cloudflare hostname is needed. Rebuild after pulling
+> changes: `docker compose --profile tunnel up -d --build`.
+
 ## 2. Add a public hostname
 
 Still on the tunnel page, open the **Public Hostname** tab → **Add a public

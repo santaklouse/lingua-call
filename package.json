@@ -9,7 +9,7 @@
     "bun": ">=1.2"
   },
   "scripts": {
-    "dev": "cd apps/web && bun x --bun vite",
+    "dev": "cd apps/web && VITE_SIGNAL_URL=ws://127.0.0.1:8787/signal bun x --bun vite",
     "build": "cd apps/web && bun x --bun vite build",
     "typecheck": "bun x tsc --noEmit -p tsconfig.json",
     "lint": "bun x eslint .",
@@ -17,7 +17,9 @@
     "format:check": "bun x prettier --check .",
     "test": "bun test",
     "test:watch": "bun test --watch",
-    "check": "bun run typecheck && bun run lint && bun run test"
+    "check": "bun run typecheck && bun run lint && bun run test",
+    "dev:signal": "bun server/signaling/index.ts",
+    "dev:all": "bun run dev:signal & bun run dev"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

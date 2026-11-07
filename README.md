@@ -53,8 +53,11 @@ docker compose --profile tunnel up -d --build
 # then open https://linguacall.<your-domain>/
 ```
 
-Full step-by-step dashboard instructions (create tunnel, public hostname
-`web:80`, Zero Trust Access) are in [`docs/TUNNEL.md`](docs/TUNNEL.md).
+The compose stack also runs a small **self-hosted WebSocket signaling server**
+(`server/signaling`), proxied by nginx at `/signal`, so quick-call room codes work
+**across devices** through the same HTTPS hostname. Full step-by-step dashboard
+instructions (create tunnel, public hostname `web:80`, Zero Trust Access) are in
+[`docs/TUNNEL.md`](docs/TUNNEL.md).
 Local preview without a tunnel: `docker compose up -d --build web` →
 `http://localhost:8080`.
 

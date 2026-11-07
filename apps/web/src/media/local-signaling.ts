@@ -1,3 +1,4 @@
+import { startQuickGuestWs, startQuickHostWs } from './quick-ws';
 import {
   DATA_CHANNEL_LABEL,
   acquireUserMedia,
@@ -15,7 +16,7 @@ import {
 const ROOM_PREFIX = 'linguacall-quick-';
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const CODE_LENGTH = 6;
-const ICE_TIMEOUT_MS = 2_500;
+const ICE_TIMEOUT_MS = 5_000;
 const JOIN_INTERVAL_MS = 500;
 const OFFER_TIMEOUT_MS = 20_000;
 
@@ -58,7 +59,7 @@ function roomName(code: string): string {
 }
 
 
-export async function startQuickHost(code: string, callbacks: QuickCallbacks = {}): Promise<QuickSession> {
+async function startQuickHostBroadcast(code: string, callbacks: QuickCallbacks = {}): Promise<QuickSession> {
   const broadcast = new BroadcastChannel(roomName(code));
   const localStream = await acquireUserMedia();
   callbacks.onLog?.(
@@ -121,7 +122,7 @@ export async function startQuickHost(code: string, callbacks: QuickCallbacks = {
   };
 }
 
-export async function startQuickGuest(code: string, callbacks: QuickCallbacks = {}): Promise<QuickSession> {
+async function startQuickGuestBroadcast(code: string, callbacks: QuickCallbacks = {}): Promise<QuickSession> {
   const broadcast = new BroadcastChannel(roomName(code));
   const state: { pc: RTCPeerConnection | null; localStream: MediaStream | null } = {
     pc: null,
@@ -203,4 +204,40 @@ export async function startQuickGuest(code: string, callbacks: QuickCallbacks = 
       for (const track of localStream.getTracks()) track.stop();
     },
   };
+}
+
+function signalingUnavailable(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes('Signaling server') ||
+    message.includes('Signaling connection closed') ||
+    message.includes('did not respond')
+  );
+}
+
+/**
+ * Quick call host: prefers the self-hosted WebSocket signaling server (works
+ * across devices through the HTTPS tunnel) and falls back to BroadcastChannel for
+ * two tabs of the same browser when no signaling server is available (e.g. plain
+ * `bun run dev` without `bun run dev:signal`).
+ */
+export async function startQuickHost(code: string, callbacks: QuickCallbacks = {}): Promise<QuickSession> {
+  try {
+    return await startQuickHostWs(code, callbacks);
+  } catch (error) {
+    if (!signalingUnavailable(error)) throw error;
+    callbacks.onLog?.('warn', 'Signaling server unavailable; using same-browser BroadcastChannel mode');
+    return startQuickHostBroadcast(code, callbacks);
+  }
+}
+
+/** Quick call guest with the same WebSocket → BroadcastChannel fallback. */
+export async function startQuickGuest(code: string, callbacks: QuickCallbacks = {}): Promise<QuickSession> {
+  try {
+    return await startQuickGuestWs(code, callbacks);
+  } catch (error) {
+    if (!signalingUnavailable(error)) throw error;
+    callbacks.onLog?.('warn', 'Signaling server unavailable; using same-browser BroadcastChannel mode');
+    return startQuickGuestBroadcast(code, callbacks);
+  }
 }

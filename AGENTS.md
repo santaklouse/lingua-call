@@ -19,7 +19,8 @@ Short version. Full rules and current state — in [`PLAN.md`](PLAN.md).
 
 ```bash
 bun install
-bun run dev       # UI (Vite)
+bun run dev:signal   # WebSocket signaling (cross-device quick calls)
+bun run dev          # UI (Vite)
 bun run typecheck
 bun run lint
 bun test

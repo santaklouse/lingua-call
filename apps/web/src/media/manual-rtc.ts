@@ -14,7 +14,7 @@ const DEFAULT_ICE_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun1.l.google.com:19302' },
 ];
 
-const ICE_GATHERING_TIMEOUT_MS = 4_000;
+const ICE_GATHERING_TIMEOUT_MS = 8_000;
 const CHANNEL_LABEL = 'linguacall-v1';
 
 /** Label of the reliable data channel used for call messages. */
