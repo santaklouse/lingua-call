@@ -58,6 +58,8 @@ importers:
         specifier: ^7.3.6
         version: 7.3.7(@types/node@24.19.2)
 
+  packages/i18n: {}
+
 packages:
 
   '@babel/code-frame@7.29.7':
