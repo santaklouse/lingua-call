@@ -15,7 +15,7 @@
 >   used (D18).
 > - **Documentation policy:** English is primary; Russian mirrors are kept as
 >   `*.RU.md` (D21). All code comments are English.
-> - Version: `v1.9` · Last update: **2026-11-07**
+> - Version: `v1.10` · Last update: **2026-11-07**
 > - **Next step: P5P-09b** (tune latency from real measurements; methodology in `docs/PERF.md`), then P4-06/P4-07. Phone-friendly UI, hash routing/refresh restoration and cross-device room codes are in place.
 
 ---
@@ -295,7 +295,7 @@ bun run build
 | Phase | Content | Status |
 |---|---|---|
 | **P0** | Bootstrap: repo, Bun tooling, CI, docs | ✅ 12/12 |
-| **P1** | UI shell and flow (language, lobby, devices, call) | ▶ 10/15 |
+| **P1** | UI shell and flow (language, lobby, devices, call) | ▶ 11/16 |
 | **P2S** | Simple WebRTC transport (broadcast/WS/manual signaling) | ▶ 6/7 |
 | **P5P** | **Prototype translation pipeline + dubbing (main feature)** | ☐ 0/10 |
 | **P4** | Real device selection/permissions/checks | ▶ 5/7 |
@@ -347,6 +347,7 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 | P1-14 | ✅ DONE (2026-11-07, 6de300e) | Hash URL routing for every screen, guard-checked back/forward, invite links as `#/lobby?token=` | P1-01 | URL changes per screen; tests |
 | P1-15 | ✅ DONE (2026-11-07, 6de300e) | Refresh-safe state: router/lobby/call/demo snapshots in sessionStorage; call screen restores room code with resume action | P1-14 | F5 restores screen/inputs; tests |
 | P1-16 | ✅ DONE (2026-11-07, 7366d0c) | Phone-friendly UI: call screen drawer sidebar, safe-area paddings, wrapping controls, responsive subtitles, mobile device/demo layouts | P1-07 | verified on 390×844 screenshots |
+| P1-17 | ✅ DONE (2026-11-07, 478ef7f) | Call subtitles: own recognized speech at the bottom (large) + the translation the peer will hear below (half size, accent colour); peer speech moved to the top overlay | P1-07 | visible in a connected call |
 
 ### P2S — Simple manual-WebRTC transport (temporary, D20)
 
@@ -472,6 +473,11 @@ controls and responsive subtitle sizes; devices/lobby/demo screens were verified
 on a 390×844 viewport. Latency instrumentation (P5P-09) copies per-stage
 p50/p90 JSON; methodology and tuning knobs are in `docs/PERF.md`.
 
+**Call subtitles (P1-17):** in a connected call the bottom overlay shows the
+user's own recognized speech in a large line, with the translation that will be
+spoken to the peer underneath in half the font size and an accent colour. Peer
+speech subtitles are shown at the top of the video.
+
 Next: P5P-09 (latency measurement/tuning to the D23 budget, `docs/PERF.md`), then
 P1-08/P1-09 (subtitle/dubbing settings polish), P4-06/P4-07.
 
@@ -512,7 +518,9 @@ P1-08/P1-09 (subtitle/dubbing settings polish), P4-06/P4-07.
   call, cross-device hint text.
 - 2026-11-07 — phone-friendly UI (P1-16: drawer sidebar, safe areas, responsive
   layout verified at 390×844) and latency instrumentation (P5P-09: demo "Copy
-  metrics", `docs/PERF.md`). Next: tuning from real measurements (P5P-09b).
+  metrics", `docs/PERF.md`).
+- 2026-11-07 — own-speech subtitles with the peer-facing translation beneath
+  (P1-17); peer subtitles at the top. Next: tuning from real measurements.
 
 **Next step:** P5P-09b (tuning from measurements) → P1-08/P1-09 → P4-06/P4-07.
 
@@ -565,7 +573,9 @@ Format: `YYYY-MM-DD · author · what was done · next step`.
   added voice selection in the call. 77 tests; F5 verified in Chrome.
 - **2026-11-07 · lead** — phone-friendly UI (drawer sidebar, safe areas,
   responsive screens verified at 390×844) and latency instrumentation
-  (`docs/PERF.md`, demo "Copy metrics"). Next: P5P-09b tuning.
+  (`docs/PERF.md`, demo "Copy metrics").
+- **2026-11-07 · lead** — own-speech subtitles + peer-facing translation line
+  (P1-17). Next: P5P-09b tuning.
 
 ---
 
