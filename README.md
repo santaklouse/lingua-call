@@ -1,31 +1,46 @@
 # LinguaCall (рабочее имя)
 
-P2P-видеосвязь с автоматическим сурдопереводом речи в субтитры и наоборот —
-без сторонних платных сервисов.
+P2P-видеосвязь с автоматическим переводом речи в субтитры — без сторонних
+платных сервисов и без серверов: всё работает в браузере.
 
-- Транспорт: [`go-p2p-netcat`](https://github.com/santaklouse/go-p2p-netcat)
+- **Транспорт:** [`go-p2p-netcat`](https://github.com/santaklouse/go-p2p-netcat)
   (libp2p + native WebRTC, pairing-токены `pnc1_`).
-- Перевод: локальные / self-hosted open-source модели (Whisper, NLLB-200,
-  Vosk, Argos/Bergamot, Piper — точный набор зависит от выбранного варианта).
-- Платформа: определяется вариантом (PWA / desktop Tauri / Android).
+- **Медиа:** WebCodecs (VP8/VP9/H.264 + Opus) поверх аутентифицированного
+  data channel.
+- **Речь:** WASM-модели в браузере (streaming-ASR sherpa-onnx/Vosk + MT
+  Bergamot), приватно и бесплатно.
+- **Выбранный вариант:** A — «всё в браузере» (решение 2026-11-07).
 
-Документы:
+## Документы
 
 | Файл | Назначение |
 |---|---|
-| [`docs/PROPOSALS.md`](docs/PROPOSALS.md) | Варианты архитектуры (A/B/C/D), матрица сравнения, рекомендация. **Сначала прочитать.** |
-| [`PLAN.md`](PLAN.md) | Живой план разработки: решения, бэклог, состояние, журнал. Его ведёт каждый агент/разработчик. |
-| [`docs/RESEARCH.md`](docs/RESEARCH.md) | Технические факты по `go-p2p-netcat`, бесплатным ASR/MT/TTS и лицензиям. |
+| [`PLAN.md`](PLAN.md) | Живой план: решения, бэклог, состояние, журнал. **Источник истины.** |
+| [`docs/PROPOSALS.md`](docs/PROPOSALS.md) | Варианты архитектуры (A/B/C/D), матрица сравнения, решение. |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Архитектура выбранного варианта (слои, протокол, медиа-конвейер). |
+| [`docs/RESEARCH.md`](docs/RESEARCH.md) | Факты по `go-p2p-netcat`, бесплатным ASR/MT/TTS и лицензиям. |
 
-Кратко о вариантах (подробно — в `docs/PROPOSALS.md`):
+## Быстрый старт
 
-- **A.** ⭐ **Выбран заказчиком (2026-11-07).** Всё в браузере: медиа через
-  data channel (WebCodecs) + WASM-модели ASR/MT; серверов нет.
-- **B.** PWA + нативное WebRTC; `go-p2p-netcat` — токен/аутентификация/
-  control-канал (SDP, ICE, субтитры); перевод — WASM-фолбэк или свой
-  `lingua-node`.
-- **C.** Desktop (Tauri) + sidecar `p2p-nc` + локальные модели: полностью офлайн.
-- **D.** Android-приложение (нужна доработка go-p2p-netcat под gomobile).
+Требования: Node.js ≥ 22, pnpm ≥ 11. Go ≥ 1.25 — опционально (для сборки
+`p2p-nc` и тестов совместимости).
 
-Статус: **выбран вариант A**, идёт bootstrap (P0). План работ —
-[`PLAN.md`](PLAN.md), бэклог P3A/P5A — под WebCodecs-медиа и WASM-модели.
+```bash
+node scripts/check-prereq.mjs
+pnpm install
+pnpm dev          # UI на http://localhost:5173
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm build
+```
+
+## Статус
+
+Bootstrap (P0): репозиторий, pnpm-workspace, TypeScript/ESLint/Prettier,
+Vitest, React+Vite каркас, i18n ru/en. Дальше — UI-экраны (P1), транспорт и
+токены (P2), медиа WebCodecs (P3A), субтитры (P5/P5A).
+
+## Лицензия
+
+MIT. Модели и движки — только с допустимыми лицензиями (см. `PLAN.md` D11).
