@@ -15,8 +15,8 @@
 >   used (D18).
 > - **Documentation policy:** English is primary; Russian mirrors are kept as
 >   `*.RU.md` (D21). All code comments are English.
-> - Version: `v1.4` · Last update: **2026-11-07**
-> - **Next step: P5P-08** (dubbing audio graph: duck the original, mix translated voice), then P5P-09 (measure and tune latency to the D23 budget). **P5P-03…P5P-07, P5P-11, P5P-12 are done — the demo is testable now, including speaker-gender voice matching.**
+> - Version: `v1.5` · Last update: **2026-11-07**
+> - **Next step: P5P-09** (measure and tune latency to the D23 budget; record p50/p90 in `docs/PERF.md`), then the remaining UI/device work (P1-06, P1-07, P4). **The live demo and the manual-WebRTC call with translation/dubbing are testable now.**
 
 ---
 
@@ -351,7 +351,7 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 | P2S-03 | ✅ DONE (2026-11-07, 10f7b43) | Manual call screen (create/join, preview, mute/camera/hangup) | P2S-02 | video/audio call possible |
 | P2S-04 | ✅ DONE (2026-11-07, 10f7b43) | Lobby entry + router guard for the temporary call | P2S-03 | reachable from lobby |
 | P2S-05 | ☐ TODO | Two-machine smoke test (documented manual checklist) | P2S-04 | `docs/TESTING.md` checklist |
-| P2S-06 | ☐ TODO | Data channel in the manual session (text subtitles for remote dubbing tests) | P2S-04 | text arrives to the peer |
+| P2S-06 | ✅ DONE (2026-11-07, e592f7b) | Data channel in the manual session + hello/subtitle protocol | P2S-04 | text arrives to the peer; protocol tests |
 
 ### P5P — Prototype translation pipeline + dubbing (main feature)
 
@@ -365,7 +365,7 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 | P5P-05 | ✅ DONE (2026-11-07, cabf178) | Web Speech Synthesis TTS adapter (serialized playback + cancel; merge policy still basic) | P5P-01 | speaks translated segments |
 | P5P-06 | ✅ DONE (2026-11-07, cabf178) | Pipeline orchestration: ASR→MT→subtitle+TTS; per-stage latency recorder | P5P-02…P5P-05 | mock-engine pipeline tests |
 | P5P-07 | ✅ DONE (2026-11-07, cabf178) | Live translation demo screen (mic → subtitles → dubbed voice, latency panel) | P5P-06 | real demo works |
-| P5P-08 | ☐ TODO | Dubbing audio graph: duck remote original, mix translated voice, echo safety | P5P-05, P5P-07 | both voices mixed correctly |
+| P5P-08 | ✅ DONE (2026-11-07, e592f7b) | Dubbing in the call: receiver speaks incoming subtitles, remote original ducked via WebAudio gain, single-slot speech queue, remote-voice gender matching | P5P-05, P5P-07 | original ducked while translation plays |
 | P5P-09 | ☐ TODO | Measure and tune to the latency budget (D23): chunking, throttling, endpointing; record p50/p90 in `docs/PERF.md` | P5P-06 | measured p50/p90 in `docs/PERF.md` |
 | P5P-11 | ✅ DONE (2026-11-07, 54dacdc) | Speaker-gender estimation from mic (pitch) + gender-aware TTS voice selection (auto/female/male) | P5P-05 | voice matches the speaker; tests |
 | P5P-12 | ✅ DONE (2026-11-07, 54dacdc) | Latency optimizations: engine warmup, background MT prefetch for stable partials, decoupled single-slot speech queue (subtitles not blocked by dubbing) | P5P-06 | segment emitted before TTS finishes; tests |
@@ -424,16 +424,18 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 
 ## 9. Current state
 
-**Now:** translation-first course (D19). The **live translation demo works**:
-lobby → "Live translation demo" → speak into the mic → see subtitles and hear
-the translated speech, with per-stage latency metrics. It uses prototype browser
-engines (Web Speech ASR, Chrome Translator, Web Speech Synthesis) and is
-**testable in Chrome/Edge now** (`bun run dev`). Dubbing picks a TTS voice that
-matches the speaker's gender (pitch estimation from the mic; can be overridden
-with Voice: Auto/Female/Male). Latency improvements: engine warmup, background
-translation prefetch and a decoupled speech queue. The temporary manual-WebRTC
-call (copyable SDP codes) also works. Next: P5P-08 (ducking the original while
-the translation plays) and P5P-09 (measurement/tuning).
+**Now:** translation-first course (D19). Two things are testable in Chrome/Edge:
+1. **Live translation demo** (lobby → "Live translation demo"): mic → subtitles →
+   dubbed translation with per-stage latency metrics and speaker-gender voice
+   matching (Voice: Auto/Female/Male).
+2. **Manual-WebRTC call** (lobby → "Simple WebRTC call"): two participants exchange
+   copyable SDP codes; each side translates their own speech into the peer's
+   language over a data channel, shows subtitles, and the receiver hears the
+   translation while the original voice is ducked. Remote-voice gender matching is
+   applied; a single-slot speech queue keeps dubbing close to live.
+
+Next: P5P-09 (latency measurement/tuning to the D23 budget, `docs/PERF.md`), then
+remaining UI/device work (P1-06, P1-07, P4).
 
 **Done:**
 - 2026-11-07 — research: `go-p2p-netcat` has no media tracks; data channel is
@@ -456,9 +458,13 @@ the translation plays) and P5P-09 (measurement/tuning).
   and the **live translation demo screen** reachable from the lobby.
 - 2026-11-07 — P5P-11/P5P-12 complete: speaker-gender detection (pitch) and
   gender-aware TTS voice selection; engine warmup, MT prefetch and decoupled
-  speech queue reduce perceived latency. 62 tests green.
+  speech queue reduce perceived latency.
+- 2026-11-07 — P2S-06/P5P-08 complete: data channel + hello/subtitle protocol in
+  the manual call, sender-side translation, receiver-side dubbing with ducking of
+  the original, single-slot speech queue and remote-voice gender matching.
+  65 tests green.
 
-**Next step:** P5P-08 (dubbing audio graph) → P5P-09 (measurement/tuning).
+**Next step:** P5P-09 (measurement/tuning) → P1-06/P1-07 → P4.
 
 **Known issues / blockers:**
 - Manual transport has no reconnect and fails on symmetric NAT (acceptable for
@@ -493,7 +499,10 @@ Format: `YYYY-MM-DD · author · what was done · next step`.
   live demo screen; 51 tests. Demo is testable in Chrome/Edge.
 - **2026-11-07 · lead** — P5P-11/P5P-12 complete: speaker-gender voice matching
   (pitch estimator + gender-aware TTS voice), engine warmup, MT prefetch,
-  decoupled speech queue; 62 tests. Next: P5P-08 (ducking), P5P-09 (measurement).
+  decoupled speech queue; 62 tests.
+- **2026-11-07 · lead** — P2S-06/P5P-08 complete: call data channel, subtitle
+  protocol, receiver-side dubbing with ducking, remote gender matching; 65 tests.
+  Next: P5P-09 (measurement/tuning), then UI/device phases.
 
 ---
 
