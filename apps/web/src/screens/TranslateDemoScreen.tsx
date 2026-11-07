@@ -113,6 +113,7 @@ export function TranslateDemoScreen() {
   const [segments, setSegments] = useState<Segment[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [latencyVersion, setLatencyVersion] = useState(0);
+  const [metricsCopied, setMetricsCopied] = useState(false);
 
   const pipelineRef = useRef<TranslationPipeline | null>(null);
   const trackerRef = useRef<PitchTracker | null>(null);
@@ -211,6 +212,24 @@ export function TranslateDemoScreen() {
 
   const latency = latencyRef.current.summary();
   void latencyVersion;
+
+  const copyMetrics = async () => {
+    const report = {
+      source,
+      target,
+      browser: navigator.userAgent,
+      secureContext: window.isSecureContext,
+      at: new Date().toISOString(),
+      latency,
+    };
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(report, null, 2));
+      setMetricsCopied(true);
+      window.setTimeout(() => setMetricsCopied(false), 2000);
+    } catch {
+      setMetricsCopied(false);
+    }
+  };
 
   const tone =
     status === 'listening'
@@ -349,8 +368,14 @@ export function TranslateDemoScreen() {
       </Card>
 
       <Card>
-        <strong>{t('translate.latency')}</strong>
-        <table style={{ width: '100%', marginTop: 8, borderCollapse: 'collapse', fontSize: 'var(--text-sm)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <strong>{t('translate.latency')}</strong>
+          <Button variant="ghost" size="sm" onClick={() => void copyMetrics()}>
+            {metricsCopied ? t('translate.copiedMetrics') : t('translate.copyMetrics')}
+          </Button>
+        </div>
+        <div style={{ width: '100%', overflowX: 'auto' }}>
+        <table style={{ width: '100%', minWidth: 320, marginTop: 8, borderCollapse: 'collapse', fontSize: 'var(--text-sm)' }}>
           <thead>
             <tr style={{ color: 'var(--color-text-muted)', textAlign: 'left' }}>
               <th style={{ fontWeight: 500, padding: '4px 0' }} />
@@ -377,6 +402,7 @@ export function TranslateDemoScreen() {
             })}
           </tbody>
         </table>
+        </div>
       </Card>
     </ScreenShell>
   );

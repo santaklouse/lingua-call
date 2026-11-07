@@ -143,6 +143,9 @@ export function ManualCallScreen() {
   const [muted, setMuted] = useState(false);
   const [cameraOn, setCameraOn] = useState(true);
   const [remoteAudioMixed, setRemoteAudioMixed] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(
+    () => window.matchMedia('(min-width: 1101px)').matches,
+  );
 
   const [peerLanguage, setPeerLanguage] = useState<Language>(otherLanguage(localLanguage));
   const [subtitles, setSubtitles] = useState<CallSubtitle[]>([]);
@@ -733,8 +736,22 @@ export function ManualCallScreen() {
               <span className={styles.hint}>#{quickCode}</span>
             ) : null}
             <StatusPill tone={modeTone}>{modeLabel}</StatusPill>
-            <Button variant="ghost" size="sm" onClick={() => go('devices')}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={styles.settingsButton}
+              onClick={() => go('devices')}
+            >
               {t('call.settings')}
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className={styles.panelsButton}
+              aria-expanded={sidebarOpen}
+              onClick={() => setSidebarOpen((value) => !value)}
+            >
+              ☰ {t('call.widgets')}
             </Button>
           </div>
         </header>
@@ -789,7 +806,14 @@ export function ManualCallScreen() {
         </div>
       </main>
 
-      <aside className={styles.sidebar}>
+      {sidebarOpen ? (
+        <div
+          className={styles.sidebarBackdrop}
+          aria-hidden="true"
+          onClick={() => setSidebarOpen(false)}
+        />
+      ) : null}
+      <aside className={[styles.sidebar, sidebarOpen ? styles.sidebarOpen : ''].join(' ')}>
         <Widget
           id="participants"
           title={t('call.participants')}

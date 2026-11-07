@@ -15,8 +15,8 @@
 >   used (D18).
 > - **Documentation policy:** English is primary; Russian mirrors are kept as
 >   `*.RU.md` (D21). All code comments are English.
-> - Version: `v1.8` · Last update: **2026-11-07**
-> - **Next step: P5P-09** (measure/tune latency), then P4-06/P4-07. Quick-call room codes work across devices via the self-hosted WebSocket signaling service; screens are reflected in the URL hash and survive refresh (P1-14/P1-15).
+> - Version: `v1.9` · Last update: **2026-11-07**
+> - **Next step: P5P-09b** (tune latency from real measurements; methodology in `docs/PERF.md`), then P4-06/P4-07. Phone-friendly UI, hash routing/refresh restoration and cross-device room codes are in place.
 
 ---
 
@@ -295,7 +295,7 @@ bun run build
 | Phase | Content | Status |
 |---|---|---|
 | **P0** | Bootstrap: repo, Bun tooling, CI, docs | ✅ 12/12 |
-| **P1** | UI shell and flow (language, lobby, devices, call) | ▶ 9/14 |
+| **P1** | UI shell and flow (language, lobby, devices, call) | ▶ 10/15 |
 | **P2S** | Simple WebRTC transport (broadcast/WS/manual signaling) | ▶ 6/7 |
 | **P5P** | **Prototype translation pipeline + dubbing (main feature)** | ☐ 0/10 |
 | **P4** | Real device selection/permissions/checks | ▶ 5/7 |
@@ -346,6 +346,7 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 | P1-12 | ☐ TODO | E2E happy path over all screens (mock transport) | P1-04…P1-09 | test green in CI |
 | P1-14 | ✅ DONE (2026-11-07, 6de300e) | Hash URL routing for every screen, guard-checked back/forward, invite links as `#/lobby?token=` | P1-01 | URL changes per screen; tests |
 | P1-15 | ✅ DONE (2026-11-07, 6de300e) | Refresh-safe state: router/lobby/call/demo snapshots in sessionStorage; call screen restores room code with resume action | P1-14 | F5 restores screen/inputs; tests |
+| P1-16 | ✅ DONE (2026-11-07, MOBILE_HASH) | Phone-friendly UI: call screen drawer sidebar, safe-area paddings, wrapping controls, responsive subtitles, mobile device/demo layouts | P1-07 | verified on 390×844 screenshots |
 
 ### P2S — Simple manual-WebRTC transport (temporary, D20)
 
@@ -372,7 +373,8 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 | P5P-06 | ✅ DONE (2026-11-07, cabf178) | Pipeline orchestration: ASR→MT→subtitle+TTS; per-stage latency recorder | P5P-02…P5P-05 | mock-engine pipeline tests |
 | P5P-07 | ✅ DONE (2026-11-07, cabf178) | Live translation demo screen (mic → subtitles → dubbed voice, latency panel) | P5P-06 | real demo works |
 | P5P-08 | ✅ DONE (2026-11-07, e592f7b) | Dubbing in the call: receiver speaks incoming subtitles, remote original ducked via WebAudio gain, single-slot speech queue, remote-voice gender matching | P5P-05, P5P-07 | original ducked while translation plays |
-| P5P-09 | ☐ TODO | Measure and tune to the latency budget (D23): chunking, throttling, endpointing; record p50/p90 in `docs/PERF.md` | P5P-06 | measured p50/p90 in `docs/PERF.md` |
+| P5P-09 | ✅ DONE (2026-11-07, MOBILE_HASH) | Latency instrumentation: demo "Copy metrics" JSON, call debug logging, `docs/PERF.md` methodology/targets | P5P-06 | metrics copyable; doc present |
+| P5P-09b | ☐ TODO | Tune to the D23 budget using real measurements (endpointing, prefetch threshold, TTS rate, queue policy) | P5P-09 | p50/p90 within target on the reference device |
 | P5P-11 | ✅ DONE (2026-11-07, 54dacdc) | Speaker-gender estimation from mic (pitch) + gender-aware TTS voice selection (auto/female/male) | P5P-05 | voice matches the speaker; tests |
 | P5P-12 | ✅ DONE (2026-11-07, 54dacdc) | Latency optimizations: engine warmup, background MT prefetch for stable partials, decoupled single-slot speech queue (subtitles not blocked by dubbing) | P5P-06 | segment emitted before TTS finishes; tests |
 | P5P-10 | ☐ TODO | Error/degradation states: no engine/no mic/unsupported browser; subtitles-only mode | P5P-03…P5P-06 | 4 scenarios covered |
@@ -464,6 +466,12 @@ and inputs (invite token, room code, device choices, demo settings). A reload
 necessarily drops the live WebRTC media; the call screen says so and offers
 "Resume room" with the restored code.
 
+**Phone-friendly UI (P1-16):** the call screen uses a slide-over drawer for the
+widget sidebar (>= 1101 px keeps the desktop column), safe-area paddings, wrapping
+controls and responsive subtitle sizes; devices/lobby/demo screens were verified
+on a 390×844 viewport. Latency instrumentation (P5P-09) copies per-stage
+p50/p90 JSON; methodology and tuning knobs are in `docs/PERF.md`.
+
 Next: P5P-09 (latency measurement/tuning to the D23 budget, `docs/PERF.md`), then
 P1-08/P1-09 (subtitle/dubbing settings polish), P4-06/P4-07.
 
@@ -501,9 +509,12 @@ P1-08/P1-09 (subtitle/dubbing settings polish), P4-06/P4-07.
   fallback; status derivation fixed, connection watchdog and richer diagnostics.
 - 2026-11-07 — URL hash routing + refresh-safe state (D26, P1-14/P1-15); widget
   layout made flex/wrap-safe (buttons no longer clipped), voice selector in the
-  call, cross-device hint text. 77 tests; browser-verified F5 restoration.
+  call, cross-device hint text.
+- 2026-11-07 — phone-friendly UI (P1-16: drawer sidebar, safe areas, responsive
+  layout verified at 390×844) and latency instrumentation (P5P-09: demo "Copy
+  metrics", `docs/PERF.md`). Next: tuning from real measurements (P5P-09b).
 
-**Next step:** P5P-09 (measurement/tuning) → P1-08/P1-09 → P4-06/P4-07.
+**Next step:** P5P-09b (tuning from measurements) → P1-08/P1-09 → P4-06/P4-07.
 
 **Known issues / blockers:**
 - Manual transport has no reconnect and fails on symmetric NAT (acceptable for
@@ -552,7 +563,9 @@ Format: `YYYY-MM-DD · author · what was done · next step`.
 - **2026-11-07 · lead** — owner requested refresh-safe URLs; added hash routing
   and sessionStorage restoration (D26, P1-14/P1-15), fixed widget flex/clipping,
   added voice selection in the call. 77 tests; F5 verified in Chrome.
-  Next: P5P-09 measurement/tuning.
+- **2026-11-07 · lead** — phone-friendly UI (drawer sidebar, safe areas,
+  responsive screens verified at 390×844) and latency instrumentation
+  (`docs/PERF.md`, demo "Copy metrics"). Next: P5P-09b tuning.
 
 ---
 

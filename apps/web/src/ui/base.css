@@ -10,8 +10,14 @@ body,
   min-height: 100%;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
+  overflow-x: hidden;
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
@@ -62,5 +68,14 @@ a {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Phone ergonomics: avoid iOS focus zoom and keep touch targets comfortable. */
+@media (max-width: 600px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
   }
 }
