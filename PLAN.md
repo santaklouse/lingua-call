@@ -15,8 +15,8 @@
 >   used (D18).
 > - **Documentation policy:** English is primary; Russian mirrors are kept as
 >   `*.RU.md` (D21). All code comments are English.
-> - Version: `v1.7` · Last update: **2026-11-07**
-> - **Next step: P5P-09** (measure/tune latency), then P4-06/P4-07. **Quick-call room codes now work across devices** through the self-hosted WebSocket signaling service (part of the Docker/Cloudflare deployment). **Deployed URL tested end-to-end.**
+> - Version: `v1.8` · Last update: **2026-11-07**
+> - **Next step: P5P-09** (measure/tune latency), then P4-06/P4-07. Quick-call room codes work across devices via the self-hosted WebSocket signaling service; screens are reflected in the URL hash and survive refresh (P1-14/P1-15).
 
 ---
 
@@ -132,6 +132,7 @@ Statuses: `ACCEPTED`, `PENDING`, `DEFERRED`, `REJECTED`, `REVISED`.
 ---
 | D25 | **ACCEPTED 2026-11-07** | **Self-hosted WebSocket signaling for cross-device quick calls**: `server/signaling` (Bun) relays offer/answer between two room members; nginx proxies it at `/signal` behind the same HTTPS tunnel; the browser tries WS first and falls back to BroadcastChannel for two tabs of one browser | Same-browser room codes worked, but cross-device quick calls need a signaling channel. A tiny self-hosted relay avoids 10 KB manual SDP copy and stays within the "no third-party services" rule. Media remains P2P; signaling never sees media. |
 
+| D26 | **ACCEPTED 2026-11-07** | **Hash URL routing + sessionStorage restoration**: every screen has a URL (`#/lobby`, `#/devices`, `#/call`, …), navigation is guard-checked, and router/lobby/call/demo state is persisted per tab so F5 restores the screen and inputs. Active WebRTC media cannot survive a reload; the call screen restores the room code and offers a resume action | Owner requires the URL to change and refresh not to lose state. Hash keeps the invite token in the fragment (never sent to the server) and works on static hosting without extra nginx rules. sessionStorage avoids cross-tab leaks; localStorage keeps only the language. |
 ## 3. Architecture (current prototype)
 
 ### 3.1. Layers
@@ -294,7 +295,7 @@ bun run build
 | Phase | Content | Status |
 |---|---|---|
 | **P0** | Bootstrap: repo, Bun tooling, CI, docs | ✅ 12/12 |
-| **P1** | UI shell and flow (language, lobby, devices, call) | ▶ 7/12 |
+| **P1** | UI shell and flow (language, lobby, devices, call) | ▶ 9/14 |
 | **P2S** | Simple WebRTC transport (broadcast/WS/manual signaling) | ▶ 6/7 |
 | **P5P** | **Prototype translation pipeline + dubbing (main feature)** | ☐ 0/10 |
 | **P4** | Real device selection/permissions/checks | ▶ 5/7 |
@@ -343,6 +344,8 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 | P1-10 | ☐ TODO | Session state machine (idle→lobby→devices→call→ended) | P0-03 | transition tests |
 | P1-11 | ☐ TODO | Settings store with persistence | P1-02 | persist + schema migration |
 | P1-12 | ☐ TODO | E2E happy path over all screens (mock transport) | P1-04…P1-09 | test green in CI |
+| P1-14 | ✅ DONE (2026-11-07, 6de300e) | Hash URL routing for every screen, guard-checked back/forward, invite links as `#/lobby?token=` | P1-01 | URL changes per screen; tests |
+| P1-15 | ✅ DONE (2026-11-07, 6de300e) | Refresh-safe state: router/lobby/call/demo snapshots in sessionStorage; call screen restores room code with resume action | P1-14 | F5 restores screen/inputs; tests |
 
 ### P2S — Simple manual-WebRTC transport (temporary, D20)
 
@@ -454,6 +457,13 @@ signaling service. Camera/mic/Web Speech require a secure context; `localhost`
 works, LAN HTTP does not. The public deployment was verified end-to-end (WS
 signaling + quick call e2e).
 
+**URL + refresh (D26/P1-14/P1-15):** each screen has a hash URL (`#/language`,
+`#/lobby`, `#/devices`, `#/call`, `#/manual-call`, `#/translate-demo`), and the
+router/lobby/call/demo state is stored in sessionStorage. F5 restores the screen
+and inputs (invite token, room code, device choices, demo settings). A reload
+necessarily drops the live WebRTC media; the call screen says so and offers
+"Resume room" with the restored code.
+
 Next: P5P-09 (latency measurement/tuning to the D23 budget, `docs/PERF.md`), then
 P1-08/P1-09 (subtitle/dubbing settings polish), P4-06/P4-07.
 
@@ -488,9 +498,10 @@ P1-08/P1-09 (subtitle/dubbing settings polish), P4-06/P4-07.
   (D24, P7-07/P7-08, `docs/TUNNEL.md`).
 - 2026-11-07 — cross-device quick rooms (D25, P2S-07): Bun WebSocket signaling
   server, nginx `/signal` proxy, compose `signal` service, WS→BroadcastChannel
-  fallback; status derivation fixed (data channel open / remote media marks the
-  session connected), connection watchdog and richer diagnostics. 71 tests;
-  public deployment e2e verified.
+  fallback; status derivation fixed, connection watchdog and richer diagnostics.
+- 2026-11-07 — URL hash routing + refresh-safe state (D26, P1-14/P1-15); widget
+  layout made flex/wrap-safe (buttons no longer clipped), voice selector in the
+  call, cross-device hint text. 77 tests; browser-verified F5 restoration.
 
 **Next step:** P5P-09 (measurement/tuning) → P1-08/P1-09 → P4-06/P4-07.
 
@@ -538,6 +549,9 @@ Format: `YYYY-MM-DD · author · what was done · next step`.
   cross-device quick rooms via a self-hosted WebSocket signaling service (D25,
   P2S-07), fixed the "both Waiting" status derivation, added connection watchdog
   and diagnostics. Public deployment tested with e2e. 71 tests.
+- **2026-11-07 · lead** — owner requested refresh-safe URLs; added hash routing
+  and sessionStorage restoration (D26, P1-14/P1-15), fixed widget flex/clipping,
+  added voice selection in the call. 77 tests; F5 verified in Chrome.
   Next: P5P-09 measurement/tuning.
 
 ---
