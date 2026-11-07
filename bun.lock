@@ -38,6 +38,13 @@
       "name": "@linguacall/i18n",
       "version": "0.1.0",
     },
+    "packages/translation": {
+      "name": "@linguacall/translation",
+      "version": "0.1.0",
+      "dependencies": {
+        "@linguacall/i18n": "workspace:*",
+      },
+    },
   },
   "packages": {
     "@babel/code-frame": ["@babel/code-frame@7.29.7", "", { "dependencies": { "@babel/helper-validator-identifier": "^7.29.7", "js-tokens": "^4.0.0", "picocolors": "^1.1.1" } }, "sha512-Aup7aUOfpbAUg2ROOJN6Iw5f9DMBlzu0mIkm/malLQFN/YQgO48wCj0Kxa3sEHJvPVFg7siR+qRInwXd2qhQKw=="],
@@ -173,6 +180,8 @@
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 
     "@linguacall/i18n": ["@linguacall/i18n@workspace:packages/i18n"],
+
+    "@linguacall/translation": ["@linguacall/translation@workspace:packages/translation"],
 
     "@linguacall/web": ["@linguacall/web@workspace:apps/web"],
 
