@@ -47,6 +47,12 @@ export function guard(state: RouterState, target: Screen): GuardResult {
       : { allowed: false, screen: 'devices', reason: 'Проверьте камеру и микрофон' };
   }
 
+  if (target === 'manual-call') {
+    return state.nativeLanguage === null
+      ? { allowed: false, screen: 'language', reason: 'Choose your native language first' }
+      : { allowed: true, screen: 'manual-call' };
+  }
+
   // 'ended' is always reachable: it is the safe exit from a call.
   return { allowed: true, screen: 'ended' };
 }

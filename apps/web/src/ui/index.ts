@@ -16,6 +16,8 @@ export { StatusPill } from './StatusPill';
 export type { StatusPillProps, StatusTone } from './StatusPill';
 export { Switch } from './Switch';
 export type { SwitchProps } from './Switch';
+export { TextArea } from './TextArea';
+export type { TextAreaProps } from './TextArea';
 export { TextField } from './TextField';
 export type { TextFieldProps } from './TextField';
 export { TokenField } from './TokenField';

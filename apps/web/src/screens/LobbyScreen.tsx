@@ -97,6 +97,9 @@ export function LobbyScreen() {
             <Button variant="secondary" size="lg" fullWidth onClick={startJoin}>
               {t('chat.join')}
             </Button>
+            <Button variant="ghost" size="sm" fullWidth onClick={() => go('manual-call')}>
+              {t('manual.entry')}
+            </Button>
           </div>
         </Card>
       ) : null}

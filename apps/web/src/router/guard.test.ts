@@ -62,6 +62,18 @@ describe('router guards', () => {
     expect(guard(inCall, 'call')).toEqual({ allowed: true, screen: 'call' });
   });
 
+  it('requires a native language before the temporary manual call', () => {
+    expect(guard(state(), 'manual-call')).toEqual({
+      allowed: false,
+      screen: 'language',
+      reason: 'Choose your native language first',
+    });
+    expect(guard(state({ nativeLanguage: 'en' }), 'manual-call')).toEqual({
+      allowed: true,
+      screen: 'manual-call',
+    });
+  });
+
   it('resolves a safe screen through resolveScreen', () => {
     expect(resolveScreen(state(), 'call')).toBe('language');
     expect(resolveScreen(state({ nativeLanguage: 'en', transportReady: true }), 'devices')).toBe(
