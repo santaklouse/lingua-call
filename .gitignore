@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Test artifacts
+coverage/
+playwright-report/
+test-results/
+.vitest/
+
+# Local env / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+!.gitkeep
+
+# Models and large caches (downloaded at runtime; never commit)
+models/
+.cache/models/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
