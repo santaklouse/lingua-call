@@ -346,7 +346,7 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 | P1-12 | ☐ TODO | E2E happy path over all screens (mock transport) | P1-04…P1-09 | test green in CI |
 | P1-14 | ✅ DONE (2026-11-07, 6de300e) | Hash URL routing for every screen, guard-checked back/forward, invite links as `#/lobby?token=` | P1-01 | URL changes per screen; tests |
 | P1-15 | ✅ DONE (2026-11-07, 6de300e) | Refresh-safe state: router/lobby/call/demo snapshots in sessionStorage; call screen restores room code with resume action | P1-14 | F5 restores screen/inputs; tests |
-| P1-16 | ✅ DONE (2026-11-07, MOBILE_HASH) | Phone-friendly UI: call screen drawer sidebar, safe-area paddings, wrapping controls, responsive subtitles, mobile device/demo layouts | P1-07 | verified on 390×844 screenshots |
+| P1-16 | ✅ DONE (2026-11-07, 7366d0c) | Phone-friendly UI: call screen drawer sidebar, safe-area paddings, wrapping controls, responsive subtitles, mobile device/demo layouts | P1-07 | verified on 390×844 screenshots |
 
 ### P2S — Simple manual-WebRTC transport (temporary, D20)
 
@@ -373,7 +373,7 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 | P5P-06 | ✅ DONE (2026-11-07, cabf178) | Pipeline orchestration: ASR→MT→subtitle+TTS; per-stage latency recorder | P5P-02…P5P-05 | mock-engine pipeline tests |
 | P5P-07 | ✅ DONE (2026-11-07, cabf178) | Live translation demo screen (mic → subtitles → dubbed voice, latency panel) | P5P-06 | real demo works |
 | P5P-08 | ✅ DONE (2026-11-07, e592f7b) | Dubbing in the call: receiver speaks incoming subtitles, remote original ducked via WebAudio gain, single-slot speech queue, remote-voice gender matching | P5P-05, P5P-07 | original ducked while translation plays |
-| P5P-09 | ✅ DONE (2026-11-07, MOBILE_HASH) | Latency instrumentation: demo "Copy metrics" JSON, call debug logging, `docs/PERF.md` methodology/targets | P5P-06 | metrics copyable; doc present |
+| P5P-09 | ✅ DONE (2026-11-07, 7366d0c) | Latency instrumentation: demo "Copy metrics" JSON, call debug logging, `docs/PERF.md` methodology/targets | P5P-06 | metrics copyable; doc present |
 | P5P-09b | ☐ TODO | Tune to the D23 budget using real measurements (endpointing, prefetch threshold, TTS rate, queue policy) | P5P-09 | p50/p90 within target on the reference device |
 | P5P-11 | ✅ DONE (2026-11-07, 54dacdc) | Speaker-gender estimation from mic (pitch) + gender-aware TTS voice selection (auto/female/male) | P5P-05 | voice matches the speaker; tests |
 | P5P-12 | ✅ DONE (2026-11-07, 54dacdc) | Latency optimizations: engine warmup, background MT prefetch for stable partials, decoupled single-slot speech queue (subtitles not blocked by dubbing) | P5P-06 | segment emitted before TTS finishes; tests |
