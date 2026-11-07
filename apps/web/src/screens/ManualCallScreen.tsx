@@ -150,6 +150,9 @@ export function ManualCallScreen() {
   const [peerLanguage, setPeerLanguage] = useState<Language>(otherLanguage(localLanguage));
   const [subtitles, setSubtitles] = useState<CallSubtitle[]>([]);
   const [localPartial, setLocalPartial] = useState('');
+  const [localSubtitle, setLocalSubtitle] = useState<{ srcText: string; dstText: string } | null>(
+    null,
+  );
   const [translationState, setTranslationState] = useState<PipelineState>('idle');
   const [translationError, setTranslationError] = useState<string | null>(null);
   const [dubbing, setDubbing] = useState(true);
@@ -322,6 +325,7 @@ export function ManualCallScreen() {
         onPartial: (text) => setLocalPartial(text),
         onSegment: (segment: Segment) => {
           setLocalPartial('');
+          setLocalSubtitle({ srcText: segment.srcText, dstText: segment.dstText });
           pushSubtitle('you', segment.srcText, segment.dstText);
           log('info', `Subtitle out: ${segment.srcText} → ${segment.dstText}`);
           if (channel.readyState === 'open') {
@@ -516,6 +520,7 @@ export function ManualCallScreen() {
     setRemoteStream(null);
     setSubtitles([]);
     setLocalPartial('');
+    setLocalSubtitle(null);
     setTranslationState('idle');
     setTranslationError(null);
     setRemoteAudioMixed(false);
@@ -778,14 +783,19 @@ export function ManualCallScreen() {
           ) : null}
 
           {latestPeerSubtitle !== undefined ? (
-            <div className={styles.subtitleOverlay}>
+            <div className={[styles.subtitleOverlay, styles.peerSubtitles].join(' ')}>
               <span className={styles.subtitleOriginal}>{latestPeerSubtitle.srcText}</span>
               <span className={styles.subtitleTranslation}>{latestPeerSubtitle.dstText}</span>
             </div>
           ) : null}
-          {localPartial.length > 0 ? (
-            <div className={styles.subtitleOverlay} style={{ bottom: 64 }}>
-              <span className={styles.subtitlePartial}>{localPartial}</span>
+          {localPartial.length > 0 || localSubtitle !== null ? (
+            <div className={[styles.subtitleOverlay, styles.ownSubtitles].join(' ')}>
+              <span className={styles.ownOriginal}>
+                {localPartial.length > 0 ? localPartial : (localSubtitle?.srcText ?? '')}
+              </span>
+              {localPartial.length === 0 && localSubtitle !== null ? (
+                <span className={styles.ownTranslation}>{localSubtitle.dstText}</span>
+              ) : null}
             </div>
           ) : null}
         </div>
