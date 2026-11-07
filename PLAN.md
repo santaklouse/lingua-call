@@ -453,7 +453,7 @@ bun run build
 | P0-09 | ✅ DONE (2026-11-07, 44221ee) | `scripts/check-prereq.mjs`: проверка тулинга (сейчас Bun/Go/git) | P0-03 | S | понятные сообщения о версиях |
 | P0-10 | ✅ DONE (2026-11-07, a17538c) | README: быстрый старт, ссылки на PLAN/PROPOSALS/RESEARCH | P0-05 | S | README актуален |
 | P0-11 | ✅ DONE (2026-11-07, ae47094) | `AGENTS.md` — краткая инструкция для агентов (читать PLAN, handoff) | P0-01 | S | файл ссылается на PLAN как источник истины |
-| P0-12 | ✅ DONE (2026-11-07, PENDING_HASH) | **Миграция тулинга на Bun**: workspaces + bun.lock, `bun test` + happy-dom вместо Vitest, CI на setup-bun, скрипты/доки | P0-11 | M | `bun install`, `bun test`, `bun run typecheck/lint/build` зелёные; Node/pnpm не используются |
+| P0-12 | ✅ DONE (2026-11-07, 59746bb) | **Миграция тулинга на Bun**: workspaces + bun.lock, `bun test` + happy-dom вместо Vitest, CI на setup-bun, скрипты/доки | P0-11 | M | `bun install`, `bun test`, `bun run typecheck/lint/build` зелёные; Node/pnpm не используются |
 
 ### P1 — UI-каркас и сценарий (моки, без сети)
 
@@ -637,7 +637,7 @@ P5T-01 — сразу после P2 (они де-рискуют проект).
 - 2026-11-07 — тулинг мигрирован на **Bun** (D18): workspaces + `bun.lock`,
   `bun test` + happy-dom вместо Vitest/jsdom, CI на `oven-sh/setup-bun`,
   скрипты и документация обновлены. `bun install/test/typecheck/lint/build`
-  зелёные. PLAN → v0.8.
+  зелёные. PLAN → v0.8. Следующий шаг: P1-04/P1-05.
 
 **Следующий шаг:** P1-04/P1-05 (экраны создания чата и подключения по токену),
 затем остальные экраны. Перед P3A/P5A/P5T — спайки P3A-01, P5A-01, P5T-01.
