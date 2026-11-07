@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@linguacall/i18n": "workspace:*",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },
