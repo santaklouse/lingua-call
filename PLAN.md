@@ -15,8 +15,8 @@
 >   used (D18).
 > - **Documentation policy:** English is primary; Russian mirrors are kept as
 >   `*.RU.md` (D21). All code comments are English.
-> - Version: `v1.6` · Last update: **2026-11-07**
-> - **Next step: P5P-09** (measure and tune latency to the D23 budget; record p50/p90 in `docs/PERF.md`), then the remaining UI work and P4-06/P4-07. **The 4-screen flow, live demo, quick/manual call and HTTPS tunnel deployment are testable now.**
+> - Version: `v1.7` · Last update: **2026-11-07**
+> - **Next step: P5P-09** (measure/tune latency), then P4-06/P4-07. **Quick-call room codes now work across devices** through the self-hosted WebSocket signaling service (part of the Docker/Cloudflare deployment). **Deployed URL tested end-to-end.**
 
 ---
 
@@ -130,6 +130,7 @@ Statuses: `ACCEPTED`, `PENDING`, `DEFERRED`, `REJECTED`, `REVISED`.
 
 | D24 | **ACCEPTED 2026-11-07** | **HTTPS deployment for real devices**: Docker (nginx static build) + Cloudflare Tunnel via `docker-compose.yml`; `docs/TUNNEL.md` explains the dashboard setup. LAN testing over plain HTTP is unsupported because camera/mic/Web Speech require a secure context | Owner's testing showed the flow is hard to verify without a secure origin. Tunnel gives HTTPS behind NAT without opening ports; Zero Trust Access can restrict testers. Localhost remains supported for dev. |
 ---
+| D25 | **ACCEPTED 2026-11-07** | **Self-hosted WebSocket signaling for cross-device quick calls**: `server/signaling` (Bun) relays offer/answer between two room members; nginx proxies it at `/signal` behind the same HTTPS tunnel; the browser tries WS first and falls back to BroadcastChannel for two tabs of one browser | Same-browser room codes worked, but cross-device quick calls need a signaling channel. A tiny self-hosted relay avoids 10 KB manual SDP copy and stays within the "no third-party services" rule. Media remains P2P; signaling never sees media. |
 
 ## 3. Architecture (current prototype)
 
@@ -294,7 +295,7 @@ bun run build
 |---|---|---|
 | **P0** | Bootstrap: repo, Bun tooling, CI, docs | ✅ 12/12 |
 | **P1** | UI shell and flow (language, lobby, devices, call) | ▶ 7/12 |
-| **P2S** | Simple manual-WebRTC transport (temporary) | ▶ 4/6 |
+| **P2S** | Simple WebRTC transport (broadcast/WS/manual signaling) | ▶ 6/7 |
 | **P5P** | **Prototype translation pipeline + dubbing (main feature)** | ☐ 0/10 |
 | **P4** | Real device selection/permissions/checks | ▶ 5/7 |
 | **P6** | Hardening: latency, reconnect, diagnostics, long calls | ☐ 0/9 |
@@ -353,6 +354,7 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 | P2S-04 | ✅ DONE (2026-11-07, 10f7b43) | Lobby entry + router guard for the temporary call | P2S-03 | reachable from lobby |
 | P2S-05 | ☐ TODO | Two-machine smoke test (documented manual checklist) | P2S-04 | `docs/TESTING.md` checklist |
 | P2S-06 | ✅ DONE (2026-11-07, e592f7b) | Data channel in the manual session + hello/subtitle protocol | P2S-04 | text arrives to the peer; protocol tests |
+| P2S-07 | ✅ DONE (2026-11-07, 4d11fad) | Cross-device quick rooms: self-hosted WebSocket signaling server, nginx `/signal` proxy, compose service, WS→BroadcastChannel fallback | P2S-04 | room code connects two devices; signaling tests |
 
 ### P5P — Prototype translation pipeline + dubbing (main feature)
 
@@ -434,19 +436,23 @@ screen has the new layout (remote video, local PiP, subtitle overlay, control ba
 and a collapsible right sidebar with Participants, Connection, Translation and
 Debug-console widgets.
 
-Two call modes are available:
-1. **Quick test in this browser** — two tabs exchange signaling via
-   BroadcastChannel (short room code, no SDP copy).
-2. **Manual codes (two machines)** — copyable SDP codes, for cross-machine calls.
+Call modes:
+1. **Quick room code** — a short code joins through the self-hosted WebSocket
+   signaling service (works across devices/browsers behind the HTTPS tunnel).
+   Without the signaling server (plain `bun run dev`), the app falls back to
+   BroadcastChannel for two tabs of the same browser.
+2. **Manual codes (two machines)** — copyable SDP codes, for debugging/backup.
 
 In both modes each side translates its own speech into the peer's language over a
 data channel; the receiver sees subtitles and hears the translation while the
 original voice is ducked. The live translation demo with per-stage latency metrics
 and speaker-gender voice matching is still available from the lobby.
 
-**HTTPS for real devices** (D24): Docker + Cloudflare Tunnel deployment is in the
-repo (`docker-compose.yml`, `docs/TUNNEL.md`). Camera/mic/Web Speech require a
-secure context; `localhost` works, LAN HTTP does not.
+**HTTPS for real devices** (D24/D25): Docker + Cloudflare Tunnel deployment is in
+the repo (`docker-compose.yml`, `docs/TUNNEL.md`) and includes the self-hosted
+signaling service. Camera/mic/Web Speech require a secure context; `localhost`
+works, LAN HTTP does not. The public deployment was verified end-to-end (WS
+signaling + quick call e2e).
 
 Next: P5P-09 (latency measurement/tuning to the D23 budget, `docs/PERF.md`), then
 P1-08/P1-09 (subtitle/dubbing settings polish), P4-06/P4-07.
@@ -479,7 +485,12 @@ P1-08/P1-09 (subtitle/dubbing settings polish), P4-06/P4-07.
 - 2026-11-07 — UI overhaul: call layout with a collapsible widget sidebar
   (Participants, Connection, Translation, Debug console), BroadcastChannel quick
   call, compressed flow; devices screen (P1-06, P4-01…P4-05); HTTPS deployment
-  (D24, P7-07/P7-08, `docs/TUNNEL.md`). 68 tests green.
+  (D24, P7-07/P7-08, `docs/TUNNEL.md`).
+- 2026-11-07 — cross-device quick rooms (D25, P2S-07): Bun WebSocket signaling
+  server, nginx `/signal` proxy, compose `signal` service, WS→BroadcastChannel
+  fallback; status derivation fixed (data channel open / remote media marks the
+  session connected), connection watchdog and richer diagnostics. 71 tests;
+  public deployment e2e verified.
 
 **Next step:** P5P-09 (measurement/tuning) → P1-08/P1-09 → P4-06/P4-07.
 
@@ -523,7 +534,11 @@ Format: `YYYY-MM-DD · author · what was done · next step`.
   HTTPS likely required. Added the call layout with widget sidebar + debug console,
   BroadcastChannel quick-call mode, a real devices screen (camera test, mic level,
   loopback) and Docker + Cloudflare Tunnel deployment with `docs/TUNNEL.md`.
-  68 tests. Next: P5P-09 measurement/tuning.
+- **2026-11-07 · lead** — owner confirmed same-browser rooms work; added
+  cross-device quick rooms via a self-hosted WebSocket signaling service (D25,
+  P2S-07), fixed the "both Waiting" status derivation, added connection watchdog
+  and diagnostics. Public deployment tested with e2e. 71 tests.
+  Next: P5P-09 measurement/tuning.
 
 ---
 
