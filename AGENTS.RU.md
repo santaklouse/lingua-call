@@ -47,6 +47,14 @@ bun run build
 - Ошибки типизированные; логи без содержимого речи в info-уровне.
 - Тесты: unit (`bun test` + Testing Library/happy-dom) на публичное поведение; протокол — golden/fuzz.
 
+## Secure context (камера/микрофон/речь)
+
+Камера, микрофон и Web Speech требуют **secure context**. `http://localhost` —
+можно; `http://192.168.x.x` — нельзя. Для реальных устройств используйте Docker +
+Cloudflare Tunnel (`docker compose --profile tunnel up -d --build`, см.
+`docs/TUNNEL.md`). Из-за этого звонок по LAN через HTTP обычно падает не из-за
+WebRTC, а из-за отсутствия HTTPS.
+
 ## Подсказки по окружению
 
 - Go: `/opt/homebrew/bin/go` (не `/usr/local/bin/go` — там старый Go 1.13).

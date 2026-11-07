@@ -68,7 +68,7 @@ try {
   console.info(`answer code: ${answer.length} chars`);
 
   await a.getByLabel('Paste answer code').fill(answer);
-  await a.getByRole('button', { name: 'Connect' }).first().click();
+  await a.getByRole('button', { name: 'Connect', exact: true }).click();
 
   await a.getByText('Connected', { exact: false }).first().waitFor({ timeout: 30_000 });
   await b.getByText('Connected', { exact: false }).first().waitFor({ timeout: 30_000 });
