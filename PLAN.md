@@ -15,8 +15,8 @@
 >   used (D18).
 > - **Documentation policy:** English is primary; Russian mirrors are kept as
 >   `*.RU.md` (D21). All code comments are English.
-> - Version: `v1.1` · Last update: **2026-11-07**
-> - **Next step: P5P-02** (mic capture + energy VAD segmenter), then P5P-03 (Web Speech ASR).
+> - Version: `v1.2` · Last update: **2026-11-07**
+> - **Next step: P5P-02b** (WebAudio mic capture), then P5P-03 (Web Speech ASR).
 
 ---
 
@@ -358,7 +358,8 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 | ID | Status | Task | Depends | DoD |
 |---|---|---|---|---|
 | P5P-01 | ✅ DONE (2026-11-07, daf2841) | `packages/translation`: `AsrEngine`/`MtEngine`/`TtsEngine` interfaces, capability manifest, latency types | — | unit tests for contracts |
-| P5P-02 | ☐ TODO | Mic capture + energy VAD segmenter (WebAudio, testable pure logic) | P5P-01 | segmenter unit tests |
+| P5P-02 | ✅ DONE (2026-11-07, a953b29) | Energy VAD segmenter (pure logic, adaptive noise floor, segment limits) | P5P-01 | unit tests |
+| P5P-02b | ☐ TODO | WebAudio mic capture adapter feeding the VAD (AudioWorklet) | P5P-02 | frames reach the segmenter in the browser |
 | P5P-03 | ☐ TODO | Web Speech ASR adapter (partial/final, feature detection, errors) | P5P-01 | works in Chrome/Edge; fallback message |
 | P5P-04 | ☐ TODO | Chrome Translator API MT adapter + fallback path | P5P-01 | ru↔en translation in Chrome/Edge |
 | P5P-05 | ☐ TODO | Web Speech Synthesis TTS adapter with queue/merge/interrupt policy | P5P-01 | speaks translated segments |
@@ -441,9 +442,12 @@ Chrome Translator → Web Speech TTS) with latency metrics.
   (`LC1.` SDP codes), temporary call screen, lobby entry.
 - 2026-11-07 — docs converted to English-primary with `*.RU.md` mirrors (D21).
 - 2026-11-07 — P5P-01 complete: `@linguacall/translation` with engine interfaces,
-  segment/latency types and the ru/en capability manifest (32 tests green).
+  segment/latency types and the ru/en capability manifest.
+- 2026-11-07 — P5P-02 complete: model-free energy VAD segmenter with adaptive
+  noise floor, min/max utterance limits, flush/reset and 12 unit tests
+  (41 tests green in total).
 
-**Next step:** P5P-02 → P5P-03 → … (see §0).
+**Next step:** P5P-02b → P5P-03 → … (see §0).
 
 **Known issues / blockers:**
 - Manual transport has no reconnect and fails on symmetric NAT (acceptable for
@@ -472,7 +476,9 @@ Format: `YYYY-MM-DD · author · what was done · next step`.
 - **2026-11-07 · lead** — P2S-01…P2S-04 complete: manual-WebRTC transport and
   call screen; 29 tests. English README/AGENTS/docs written with RU mirrors.
 - **2026-11-07 · lead** — P5P-01 complete: translation engine interfaces,
-  segment/latency types, capability manifest; 32 tests. Next: P5P-02 (VAD).
+  segment/latency types, capability manifest; 32 tests.
+- **2026-11-07 · lead** — P5P-02 complete: energy VAD segmenter + tests (41 total).
+  Next: P5P-02b (WebAudio mic capture) → P5P-03 (Web Speech ASR).
 
 ---
 
