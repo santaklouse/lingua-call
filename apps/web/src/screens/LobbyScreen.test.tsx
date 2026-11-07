@@ -29,7 +29,7 @@ describe('lobby screen', () => {
     expect(screen.getByText('Waiting for the other participant…')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('3. Camera and microphone');
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Camera and microphone');
   });
 
   it('joins with a valid token and rejects invalid ones', () => {
@@ -46,7 +46,7 @@ describe('lobby screen', () => {
     expect(screen.queryByText('Token must start with pnc1_')).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('3. Camera and microphone');
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Camera and microphone');
   });
 
   it('prefills the join form from an invite link hash', () => {

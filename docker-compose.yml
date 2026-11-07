@@ -1,0 +1,38 @@
+name: linguacall
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: linguacall-web:local
+    restart: unless-stopped
+    # Local preview only (http://localhost:8080). For phones/other machines use
+    # the HTTPS Cloudflare Tunnel profile: camera/mic require a secure context.
+    ports:
+      - "8080:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - linguacall
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    profiles: ["tunnel"]
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?Set CLOUDFLARE_TUNNEL_TOKEN in .env}
+    depends_on:
+      web:
+        condition: service_healthy
+    networks:
+      - linguacall
+
+networks:
+  linguacall:
+    driver: bridge

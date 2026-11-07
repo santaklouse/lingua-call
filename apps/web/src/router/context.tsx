@@ -10,6 +10,8 @@ export type RouterContextValue = {
   dispatch: Dispatch<RouterAction>;
   /** Navigates only if the target screen is allowed; returns a guard reason otherwise. */
   go: (target: Screen) => { allowed: boolean; reason?: string };
+  /** Applies a state change and navigates based on the resulting state (atomic). */
+  goWith: (action: RouterAction, target: Screen) => { allowed: boolean; reason?: string };
   setLanguage: (language: Language) => void;
 };
 
@@ -24,6 +26,13 @@ export function RouterProvider({ children }: { children: ReactNode }) {
       dispatch,
       go: (target) => {
         const result = guard(state, target);
+        dispatch({ type: 'navigate', screen: result.screen });
+        return result.allowed ? { allowed: true } : { allowed: false, reason: result.reason };
+      },
+      goWith: (action, target) => {
+        const nextState = routerReducer(state, action);
+        const result = guard(nextState, target);
+        dispatch(action);
         dispatch({ type: 'navigate', screen: result.screen });
         return result.allowed ? { allowed: true } : { allowed: false, reason: result.reason };
       },

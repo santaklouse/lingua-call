@@ -2,6 +2,7 @@ import { Button, Card, ScreenShell, StatusPill } from './ui';
 import { LanguageScreen } from './screens/LanguageScreen';
 import { LobbyScreen } from './screens/LobbyScreen';
 import { ManualCallScreen } from './screens/ManualCallScreen';
+import { DevicesScreen } from './screens/DevicesScreen';
 import { TranslateDemoScreen } from './screens/TranslateDemoScreen';
 import { RouterProvider, useRouter } from './router/context';
 import type { Screen } from './router/state';
@@ -99,6 +100,8 @@ function CurrentScreen() {
   if (state.screen === 'language') return <LanguageScreen />;
   if (state.screen === 'lobby') return <LobbyScreen />;
   if (state.screen === 'manual-call') return <ManualCallScreen />;
+  if (state.screen === 'devices') return <DevicesScreen />;
+  if (state.screen === 'call') return <ManualCallScreen />;
   if (state.screen === 'translate-demo') return <TranslateDemoScreen />;
   return <ScreenStub />;
 }

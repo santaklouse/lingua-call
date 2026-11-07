@@ -47,6 +47,14 @@ bun run build
 - Errors are typed; logs without speech content at info level.
 - Tests: unit (`bun test` + Testing Library/happy-dom) for public behavior; protocol — golden/fuzz.
 
+## Secure context (camera/mic/speech)
+
+Camera, microphone and Web Speech require a **secure context**. `http://localhost`
+is fine; `http://192.168.x.x` is not. For real devices use the Docker + Cloudflare
+Tunnel setup (`docker compose --profile tunnel up -d --build`, see
+`docs/TUNNEL.md`). This is also the reason a failing LAN call is usually an HTTP
+problem, not a WebRTC bug.
+
 ## Environment hints
 
 - Go: `/opt/homebrew/bin/go` (not `/usr/local/bin/go` — that one is the old Go 1.13).

@@ -17,6 +17,9 @@ const DEFAULT_ICE_SERVERS: RTCIceServer[] = [
 const ICE_GATHERING_TIMEOUT_MS = 4_000;
 const CHANNEL_LABEL = 'linguacall-v1';
 
+/** Label of the reliable data channel used for call messages. */
+export const DATA_CHANNEL_LABEL = CHANNEL_LABEL;
+
 export type ManualCallErrorCode = 'invalid-code' | 'media' | 'connection';
 
 export class ManualCallError extends Error {
@@ -37,18 +40,21 @@ export function acquireUserMedia(): Promise<MediaStream> {
   if (typeof navigator === 'undefined' || navigator.mediaDevices === undefined) {
     return Promise.reject(new ManualCallError('media', 'mediaDevices is not available'));
   }
+  const audio = { echoCancellation: true, noiseSuppression: true, autoGainControl: true };
+  const video = { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } };
   return navigator.mediaDevices
-    .getUserMedia({
-      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-      video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } },
-    })
-    .catch((error: unknown) => {
-      const message = error instanceof Error ? error.message : String(error);
-      throw new ManualCallError('media', message);
-    });
+    .getUserMedia({ audio, video })
+    .catch(() =>
+      // Camera is often busy (another tab/app): fall back to audio-only so the
+      // call and live translation still work.
+      navigator.mediaDevices.getUserMedia({ audio }).catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : String(error);
+        throw new ManualCallError('media', message);
+      }),
+    );
 }
 
-function waitForIceGathering(pc: RTCPeerConnection, timeoutMs = ICE_GATHERING_TIMEOUT_MS): Promise<void> {
+export function waitForIceGathering(pc: RTCPeerConnection, timeoutMs = ICE_GATHERING_TIMEOUT_MS): Promise<void> {
   if (pc.iceGatheringState === 'complete') return Promise.resolve();
   return new Promise((resolve) => {
     const finish = () => {
@@ -64,11 +70,11 @@ function waitForIceGathering(pc: RTCPeerConnection, timeoutMs = ICE_GATHERING_TI
   });
 }
 
-function attachLocalTracks(pc: RTCPeerConnection, stream: MediaStream): void {
+export function attachLocalTracks(pc: RTCPeerConnection, stream: MediaStream): void {
   for (const track of stream.getTracks()) pc.addTrack(track, stream);
 }
 
-function newPeerConnection(): RTCPeerConnection {
+export function newPeerConnection(): RTCPeerConnection {
   return new RTCPeerConnection(rtcConfiguration());
 }
 

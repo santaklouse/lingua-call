@@ -22,3 +22,5 @@ export { TextField } from './TextField';
 export type { TextFieldProps } from './TextField';
 export { TokenField } from './TokenField';
 export type { TokenFieldProps } from './TokenField';
+export { Widget } from './Widget';
+export type { WidgetProps } from './Widget';

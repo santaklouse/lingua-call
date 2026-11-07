@@ -41,6 +41,23 @@ bun test
 bun run build
 ```
 
+## Test on real devices (HTTPS required)
+
+Browsers expose the camera, microphone and Web Speech APIs only in a **secure
+context**. `http://localhost` works, but phones/other machines cannot use media
+over plain HTTP. Use the bundled Docker + Cloudflare Tunnel setup:
+
+```bash
+cp .env.example .env            # paste your CLOUDFLARE_TUNNEL_TOKEN
+docker compose --profile tunnel up -d --build
+# then open https://linguacall.<your-domain>/
+```
+
+Full step-by-step dashboard instructions (create tunnel, public hostname
+`web:80`, Zero Trust Access) are in [`docs/TUNNEL.md`](docs/TUNNEL.md).
+Local preview without a tunnel: `docker compose up -d --build web` →
+`http://localhost:8080`.
+
 ## Status
 
 P0 bootstrap is complete (12/12 tasks) and the toolchain is Bun. The UI shell now

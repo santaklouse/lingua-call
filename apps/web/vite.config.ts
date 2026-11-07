@@ -16,6 +16,7 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    allowedHosts: ['localhost', 'e96f-188-163-4-22.ngrok-free.app', '*.ngrok-free.app'],
     fs: {
       allow: [resolve(import.meta.dirname, '../..')],
     },

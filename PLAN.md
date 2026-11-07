@@ -15,8 +15,8 @@
 >   used (D18).
 > - **Documentation policy:** English is primary; Russian mirrors are kept as
 >   `*.RU.md` (D21). All code comments are English.
-> - Version: `v1.5` · Last update: **2026-11-07**
-> - **Next step: P5P-09** (measure and tune latency to the D23 budget; record p50/p90 in `docs/PERF.md`), then the remaining UI/device work (P1-06, P1-07, P4). **The live demo and the manual-WebRTC call with translation/dubbing are testable now.**
+> - Version: `v1.6` · Last update: **2026-11-07**
+> - **Next step: P5P-09** (measure and tune latency to the D23 budget; record p50/p90 in `docs/PERF.md`), then the remaining UI work and P4-06/P4-07. **The 4-screen flow, live demo, quick/manual call and HTTPS tunnel deployment are testable now.**
 
 ---
 
@@ -128,6 +128,7 @@ Statuses: `ACCEPTED`, `PENDING`, `DEFERRED`, `REJECTED`, `REVISED`.
 | D22 | **ACCEPTED 2026-11-07** | Prototype engines: Web Speech API for ASR, Chrome/Edge built-in Translator API for MT, Web Speech Synthesis for TTS; feature-detect + clear fallbacks | Fastest path to a real end-to-end demo with no model downloads. **Prototype only**: Web Speech ASR may use vendor cloud, so final version must switch to local WASM engines (P5A/P5T) to satisfy the no-third-party rule. |
 | D23 | **ACCEPTED 2026-11-07** | **Latency budget** for the prototype: partial ASR ≤ 300 ms, final ASR ≤ 700 ms after speech end, MT ≤ 150 ms, TTS start ≤ 300 ms; target end-to-end dubbing ≤ 1.5 s (p50), ≤ 2.5 s (p90) | The main feature must feel live; every pipeline stage gets timestamps and local metrics. |
 
+| D24 | **ACCEPTED 2026-11-07** | **HTTPS deployment for real devices**: Docker (nginx static build) + Cloudflare Tunnel via `docker-compose.yml`; `docs/TUNNEL.md` explains the dashboard setup. LAN testing over plain HTTP is unsupported because camera/mic/Web Speech require a secure context | Owner's testing showed the flow is hard to verify without a secure origin. Tunnel gives HTTPS behind NAT without opening ports; Zero Trust Access can restrict testers. Localhost remains supported for dev. |
 ---
 
 ## 3. Architecture (current prototype)
@@ -292,12 +293,12 @@ bun run build
 | Phase | Content | Status |
 |---|---|---|
 | **P0** | Bootstrap: repo, Bun tooling, CI, docs | ✅ 12/12 |
-| **P1** | UI shell and flow (language, lobby, subtitles/dubbing UI) | ▶ 5/12 |
+| **P1** | UI shell and flow (language, lobby, devices, call) | ▶ 7/12 |
 | **P2S** | Simple manual-WebRTC transport (temporary) | ▶ 4/6 |
 | **P5P** | **Prototype translation pipeline + dubbing (main feature)** | ☐ 0/10 |
-| **P4** | Real device selection/permissions/checks | ☐ 0/7 |
+| **P4** | Real device selection/permissions/checks | ▶ 5/7 |
 | **P6** | Hardening: latency, reconnect, diagnostics, long calls | ☐ 0/9 |
-| **P7** | Build, hosting, docs, demo | ☐ 0/6 |
+| **P7** | Build, hosting, docs, demo | ▶ 2/8 |
 | **Later** | P2N (go-p2p-netcat), P5A (local ASR/MT), P5T (local TTS), P3A (WebCodecs), variants B/C/D | — |
 
 Sizes: `S` ≤ ~150 lines, `M` ~150–400, `L` > 400 (split L before starting).
@@ -334,8 +335,8 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 | P1-03 | ✅ DONE (2026-11-07, 5ba167a) | Design tokens + base UI kit | P0-05 | kit + `#kit` gallery + tests |
 | P1-04 | ✅ DONE (2026-11-07, 230f917) | Create-chat screen (mock token, share link) | P1-01 | token copied, link generated |
 | P1-05 | ✅ DONE (2026-11-07, 230f917) | Join-by-token screen (validation, hash prefill) | P1-01 | clear validation errors |
-| P1-06 | ☐ TODO | Devices screen (mock list, preview stub) | P1-01 | device choice kept in state |
-| P1-07 | ☐ TODO | Call layout (remote/local video, controls) | P1-01 | static layout |
+| P1-06 | ✅ DONE (2026-11-07, TUNNEL_HASH) | Devices screen: real camera preview, device selects, mic level, loopback, permission errors | P1-01 | device choice kept in state |
+| P1-07 | ✅ DONE (2026-11-07, TUNNEL_HASH) | Call layout: remote video, local PiP, subtitle overlay, controls, sidebar widgets | P1-01 | layout used by the call screen |
 | P1-08 | ☐ TODO | Subtitle component (original/translated, partial/final) | P1-07 | render-state tests |
 | P1-09 | ☐ TODO | Subtitle + dubbing settings panel | P1-08 | settings applied & persisted |
 | P1-10 | ☐ TODO | Session state machine (idle→lobby→devices→call→ended) | P0-03 | transition tests |
@@ -375,11 +376,11 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 
 | ID | Status | Task | Depends | DoD |
 |---|---|---|---|---|
-| P4-01 | ☐ TODO | `enumerateDevices` + permissions + denial handling | P1-06 | permission states in UI |
-| P4-02 | ☐ TODO | Real camera preview on the devices screen | P4-01 | preview works |
-| P4-03 | ☐ TODO | Mic level meter + "hear yourself" loopback test | P4-01 | level moves, loopback works |
-| P4-04 | ☐ TODO | Persist chosen devices + `devicechange` handling | P4-02 | devices switch without reload |
-| P4-05 | ☐ TODO | Error states: none/busy/denied/no-permission | P4-01 | 4 scenarios tested |
+| P4-01 | ✅ DONE (2026-11-07, TUNNEL_HASH) | `enumerateDevices` + permissions + denial handling | P1-06 | permission states in UI |
+| P4-02 | ✅ DONE (2026-11-07, TUNNEL_HASH) | Real camera preview on the devices screen | P4-01 | preview works |
+| P4-03 | ✅ DONE (2026-11-07, TUNNEL_HASH) | Mic level meter + "hear yourself" loopback test | P4-01 | level moves, loopback works |
+| P4-04 | ✅ DONE (2026-11-07, TUNNEL_HASH) | Persist chosen devices + `devicechange` handling | P4-02 | devices switch without reload |
+| P4-05 | ✅ DONE (2026-11-07, TUNNEL_HASH) | Error states: none/busy/denied/no-permission | P4-01 | 4 scenarios tested |
 | P4-06 | ☐ TODO | Constraint profiles (720p/30, 480p/15) | P4-02 | profiles applied |
 | P4-07 | ☐ TODO | Device switching during a call, mute/camera off | P4-04, P1-07 | no call loss |
 
@@ -407,6 +408,8 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 | P7-04 | ☐ TODO | Demo video/screenshots + README gif | P7-03 | README updated |
 | P7-05 | ☐ TODO | Final audit: licenses, privacy, handoff instructions | P6-07, P5P-10 | checklist closed |
 | P7-06 | ☐ TODO | Clean-clone check: clone → install → test → build | P7-02 | reproducible build |
+| P7-07 | ✅ DONE (2026-11-07, TUNNEL_HASH) | Dockerfile (Bun build → nginx) + SPA nginx config + healthcheck | P7-02 | `docker compose up web` serves the app |
+| P7-08 | ✅ DONE (2026-11-07, TUNNEL_HASH) | `docker-compose.yml` with Cloudflare Tunnel profile + `docs/TUNNEL.md`/`.RU.md` step-by-step dashboard guide | P7-07 | HTTPS URL works, instructions verified |
 
 ### Deferred (not now)
 
@@ -424,18 +427,29 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 
 ## 9. Current state
 
-**Now:** translation-first course (D19). Two things are testable in Chrome/Edge:
-1. **Live translation demo** (lobby → "Live translation demo"): mic → subtitles →
-   dubbed translation with per-stage latency metrics and speaker-gender voice
-   matching (Voice: Auto/Female/Male).
-2. **Manual-WebRTC call** (lobby → "Simple WebRTC call"): two participants exchange
-   copyable SDP codes; each side translates their own speech into the peer's
-   language over a data channel, shows subtitles, and the receiver hears the
-   translation while the original voice is ducked. Remote-voice gender matching is
-   applied; a single-slot speech queue keeps dubbing close to live.
+**Now:** translation-first course (D19). The full **4-screen flow works**:
+native language → lobby (invite token/link) → **devices screen with a real camera
+preview, device selects, mic level and loopback test** → call screen. The call
+screen has the new layout (remote video, local PiP, subtitle overlay, control bar)
+and a collapsible right sidebar with Participants, Connection, Translation and
+Debug-console widgets.
+
+Two call modes are available:
+1. **Quick test in this browser** — two tabs exchange signaling via
+   BroadcastChannel (short room code, no SDP copy).
+2. **Manual codes (two machines)** — copyable SDP codes, for cross-machine calls.
+
+In both modes each side translates its own speech into the peer's language over a
+data channel; the receiver sees subtitles and hears the translation while the
+original voice is ducked. The live translation demo with per-stage latency metrics
+and speaker-gender voice matching is still available from the lobby.
+
+**HTTPS for real devices** (D24): Docker + Cloudflare Tunnel deployment is in the
+repo (`docker-compose.yml`, `docs/TUNNEL.md`). Camera/mic/Web Speech require a
+secure context; `localhost` works, LAN HTTP does not.
 
 Next: P5P-09 (latency measurement/tuning to the D23 budget, `docs/PERF.md`), then
-remaining UI/device work (P1-06, P1-07, P4).
+P1-08/P1-09 (subtitle/dubbing settings polish), P4-06/P4-07.
 
 **Done:**
 - 2026-11-07 — research: `go-p2p-netcat` has no media tracks; data channel is
@@ -462,9 +476,12 @@ remaining UI/device work (P1-06, P1-07, P4).
 - 2026-11-07 — P2S-06/P5P-08 complete: data channel + hello/subtitle protocol in
   the manual call, sender-side translation, receiver-side dubbing with ducking of
   the original, single-slot speech queue and remote-voice gender matching.
-  65 tests green.
+- 2026-11-07 — UI overhaul: call layout with a collapsible widget sidebar
+  (Participants, Connection, Translation, Debug console), BroadcastChannel quick
+  call, compressed flow; devices screen (P1-06, P4-01…P4-05); HTTPS deployment
+  (D24, P7-07/P7-08, `docs/TUNNEL.md`). 68 tests green.
 
-**Next step:** P5P-09 (measurement/tuning) → P1-06/P1-07 → P4.
+**Next step:** P5P-09 (measurement/tuning) → P1-08/P1-09 → P4-06/P4-07.
 
 **Known issues / blockers:**
 - Manual transport has no reconnect and fails on symmetric NAT (acceptable for
@@ -502,7 +519,11 @@ Format: `YYYY-MM-DD · author · what was done · next step`.
   decoupled speech queue; 62 tests.
 - **2026-11-07 · lead** — P2S-06/P5P-08 complete: call data channel, subtitle
   protocol, receiver-side dubbing with ducking, remote gender matching; 65 tests.
-  Next: P5P-09 (measurement/tuning), then UI/device phases.
+- **2026-11-07 · lead** — owner feedback: manual call unclear and step 3 missing;
+  HTTPS likely required. Added the call layout with widget sidebar + debug console,
+  BroadcastChannel quick-call mode, a real devices screen (camera test, mic level,
+  loopback) and Docker + Cloudflare Tunnel deployment with `docs/TUNNEL.md`.
+  68 tests. Next: P5P-09 measurement/tuning.
 
 ---
 

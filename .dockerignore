@@ -1,0 +1,17 @@
+.git
+.gitignore
+node_modules
+**/node_modules
+dist
+**/dist
+coverage
+playwright-report
+test-results
+.bun-cache
+.tmp
+models
+docs
+*.md
+.env
+.env.*
+!.env.example
