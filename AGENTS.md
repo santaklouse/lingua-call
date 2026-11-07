@@ -16,12 +16,12 @@
 ## Команды
 
 ```bash
-pnpm install
-pnpm dev          # UI (Vite)
-pnpm typecheck
-pnpm lint
-pnpm test
-pnpm build
+bun install
+bun run dev       # UI (Vite)
+bun run typecheck
+bun run lint
+bun test
+bun run build
 ```
 
 ## Жёсткие ограничения
@@ -43,11 +43,11 @@ pnpm build
 - Все тексты UI — через `@linguacall/i18n`.
 - Публичные API пакетов — через `src/index.ts`.
 - Ошибки типизированные; логи без содержимого речи в info-уровне.
-- Тесты: unit (Vitest) на публичное поведение; протокол — golden/fuzz.
+- Тесты: unit (`bun test` + Testing Library/happy-dom) на публичное поведение; протокол — golden/fuzz.
 
 ## Подсказки по окружению
 
 - Go: `/opt/homebrew/bin/go` (не `/usr/local/bin/go` — там старый Go 1.13).
-- `scripts/check-prereq.mjs` проверяет Node/pnpm/Go/git.
+- `scripts/check-prereq.mjs` проверяет Bun/Go/git.
 - Публичные Nostr/WebTorrent signaling и STUN — бесплатные, но внешние;
   self-hosted замена — задел на будущее.

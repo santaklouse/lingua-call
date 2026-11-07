@@ -25,23 +25,23 @@ P2P-видеосвязь с автоматическим переводом ре
 
 ## Быстрый старт
 
-Требования: Node.js ≥ 22, pnpm ≥ 11. Go ≥ 1.25 — опционально (для сборки
-`p2p-nc` и тестов совместимости).
+Требования: **Bun ≥ 1.2** (рантайм, пакетный менеджер и тест-раннер).
+Go ≥ 1.25 — опционально (для сборки `p2p-nc` и тестов совместимости).
 
 ```bash
-node scripts/check-prereq.mjs
-pnpm install
-pnpm dev          # UI на http://localhost:5173
-pnpm typecheck
-pnpm lint
-pnpm test
-pnpm build
+bun scripts/check-prereq.mjs
+bun install
+bun run dev       # UI на http://localhost:5173
+bun run typecheck
+bun run lint
+bun test
+bun run build
 ```
 
 ## Статус
 
-Bootstrap (P0) завершён: репозиторий, pnpm-workspace, TypeScript/ESLint/
-Prettier, Vitest, React+Vite каркас, i18n ru/en. Дальше — UI-экраны (P1),
+Bootstrap (P0) завершён: репозиторий, Bun-workspaces, TypeScript/ESLint/
+Prettier, `bun test` + happy-dom, React+Vite каркас, i18n ru/en. Дальше — UI-экраны (P1),
 транспорт и токены (P2), медиа WebCodecs (P3A), субтитры (P5/P5A) и
 дубляж/TTS (P5T).
 

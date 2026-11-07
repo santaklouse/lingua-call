@@ -13,7 +13,9 @@
 >   своём языке. TTS — обязательная часть MVP (D17, P5T).
 > - **Лицензии:** проект некоммерческий. По умолчанию — MIT/Apache-2.0/
 >   MPL-2.0/CC-BY (см. D11); NC-модели допустимы (Silero TTS), но не обязательны.
-> - Версия плана: `v0.7` · Последнее обновление: **2026-11-07**
+> - Версия плана: `v0.8` · Последнее обновление: **2026-11-07**
+> - **Тулинг: Bun** (рантайм + пакетный менеджер + `bun test`), Node/pnpm не
+>   используются (D18).
 > - Автор текущей итерации: lead (DeepSeek Harness)
 > - **Следующий шаг: P1-04/P1-05** (экраны «создать чат» и «подключиться»),
 >   затем P1-06…; спайки P3A-01/P5A-01/P5T-01 — сразу после P2.
@@ -134,6 +136,7 @@ WASM-модели в браузере.
 | D11 | ПРИНЯТО | Модели: допустимы MIT/Apache-2.0/MPL-2.0/CC-BY; NC (Silero TTS, NLLB) — допустимы, проект некоммерческий, но фиксируем в `docs/LICENSES.md`; GPL/AGPL — только по отдельному решению (Piper-код GPL, но **piper-voices** — MIT; используем только голоса, не GPL-код) | Не тащим GPL-код в MIT-проект. Ведём `docs/LICENSES.md` + CI (P5-12). |
 | D17 | **ПРИНЯТО 2026-11-07** | **Дубляж — обязательная фича MVP.** TTS исполняется на приёмнике из полученного `SUBTITLE` (перевод уже на его языке). Режимы: «оригинал выкл / тихо / полностью»; громкость перевода отдельно; очередь TTS последовательная, короткие сегменты склеиваются, длинные режутся по границам; частичные гипотезы не озвучиваются | Пользователь должен слышать перевод (требование заказчика). Приёмник уже имеет текст в своём языке и свой голос; не нужно гонять синтезированное аудио по сети. Эхо лечится `echoCancellation` + режимом наушников. |
 | D12 | **ПРИНЯТО 2026-11-07** | Медиа мультиплексируется в **тот же** аутентифицированный `WebRtcStream` (один data channel, ordered reliable). Приоритеты: control/subtitles > audio > video; свой пейсер и очередь | Не требуем второго соединения и не меняем core; минус — head-of-line при потерях, компенсируем FEC/запросами keyframe/адаптацией. |
+| D18 | **ПРИНЯТО 2026-11-07** | **Bun вместо Node/pnpm**: workspaces и lockfile — Bun; unit-тесты — `bun test` + Testing Library/happy-dom; CI — `oven-sh/setup-bun`; Vite/tsc/ESLint/Prettier запускаются через `bun x --bun`; Node не требуется | Требование заказчика; Bun — рантайм, PM и тест-раннер в одном; быстрее install/start. Ограничение: Playwright/некоторые Node-инструменты — через `bun x` (совместимость проверять). |
 | D13 | ПРИНЯТО | Identity (Ed25519) в IndexedDB; токен — только `#fragment` URL, не в localStorage; listener — на главном потоке | Без стабильной identity токен не переиспользовать; `#fragment` не уходит на серверы; `RTCPeerConnection` только в Window → вкладка открыта. |
 | D14 | ПРИНЯТО | Захват: `MediaStreamTrackProcessor` → `VideoFrame` (Chrome/Edge); fallback — `<video>` + `requestVideoFrameCallback` + `new VideoFrame(video)`; аудио — `AudioWorklet` + `AudioEncoder` (Opus), при отсутствии — Opus WASM | WebCodecs-энкодер есть не везде; Firefox Android — нет; fallback обязателен. |
 | D15 | ПРИНЯТО | В начале P3A и P5A — обязательные спайки с замерами (P3A-01, P5A-01) | Две главные технические неопределённости: реальная пропускная способность/латентность медиа по data channel и браузерный streaming-ASR. |
@@ -290,13 +293,13 @@ data channel/ICE stats), ASR/MT latency (p50/p90), состояние соеди
 
 | Что | Значение |
 |---|---|
-| Node.js | ≥ 22 (на машине разработки 24.22.1) |
-| pnpm | 11.x |
+| **Bun** | ≥ 1.2 (на машине разработки 1.4.0) — рантайм, пакетный менеджер, тест-раннер |
+| Workspaces | `bun install`, `bun.lock` |
 | Go | 1.25+ (`/opt/homebrew/bin/go`) — для сборки `p2p-nc` и тестов совместимости |
 | TypeScript | 5.x, strict |
 | UI | React 19 + Vite 7 |
-| Тесты | Vitest (unit), Playwright (e2e, два контекста) |
-| Кодстайл | ESLint + Prettier, `pnpm lint`, `pnpm typecheck`, `pnpm test` |
+| Тесты | `bun test` (unit + Testing Library/happy-dom), Playwright (e2e, два контекста) |
+| Кодстайл | ESLint + Prettier, `bun run lint`, `bun run typecheck`, `bun test` |
 | Git | Conventional Commits, маленькие коммиты (≤ ~400 строк диффа) |
 
 ### 4.2. Зависимости от `go-p2p-netcat`
@@ -332,12 +335,12 @@ data channel/ICE stats), ASR/MT latency (p50/p90), состояние соеди
 ### 4.5. Команды проекта (появятся в P0)
 
 ```bash
-pnpm install
-pnpm dev          # web UI
-pnpm typecheck
-pnpm lint
-pnpm test
-pnpm build
+bun install
+bun run dev       # web UI
+bun run typecheck
+bun run lint
+bun test
+bun run build
 ```
 
 ---
@@ -401,7 +404,7 @@ pnpm build
 
 ### 6.4. Тесты
 
-- Каждый пакет — unit-тесты публичного поведения; протокол — golden-тесты
+- Каждый пакет — unit-тесты публичного поведения (`bun test`); протокол — golden-тесты
   encode/decode + fuzz на невалидных кадрах.
 - Медиа-код — юнит-тесты на пакетизатор/джиттер без реального кодека (моки
   `VideoEncoder`/`VideoDecoder`), плюс ручные чек-листы в браузере.
@@ -415,7 +418,7 @@ pnpm build
 
 | Фаза | Содержание | Задач | Ключевой результат |
 |---|---|---|---|
-| **P0** | Bootstrap: репозиторий, тулинг, CI, docs — ✅ DONE | 11/11 | `pnpm test` зелёный, каркас репо |
+| **P0** | Bootstrap: репозиторий, тулинг, CI, docs — ✅ DONE | 12/12 | `bun test` зелёный, каркас репо |
 | **P1** | UI-каркас и 4 экрана на моках | ~12 | кликабельный сценарий без сети |
 | **P2** | Транспорт p2p-nc, identity, токены, протокол | ~13 | два узла видят друг друга, HELLO проходит |
 | **P3A** | Медиа WebCodecs по data channel | ~12 | видео/аудио между двумя вкладками |
@@ -440,16 +443,17 @@ pnpm build
 | ID | Статус | Задача | Зависит | Размер | DoD |
 |---|---|---|---|---|---|
 | P0-01 | ✅ DONE (2026-11-07, 8abff3d) | Инициализация git-репозитория, `.gitignore`, `.editorconfig`, LICENSE (MIT) | — | S | `git init`, базовые файлы, первый коммит |
-| P0-02 | ✅ DONE (2026-11-07, b667e7f) | pnpm-workspace + корневой `package.json` со скриптами `dev/lint/typecheck/test/build` | P0-01 | S | `pnpm install` работает, скрипты-заглушки |
-| P0-03 | ✅ DONE (2026-11-07, 64bcd71) | TypeScript + ESLint + Prettier конфиг (strict, shared) | P0-02 | S | `pnpm lint`, `pnpm typecheck` зелёные |
+| P0-02 | ✅ DONE (2026-11-07, b667e7f) | Workspace + корневой `package.json` со скриптами `dev/lint/typecheck/test/build` (изначально pnpm, позже Bun) | P0-01 | S | установка зависимостей работает, скрипты-заглушки |
+| P0-03 | ✅ DONE (2026-11-07, 64bcd71) | TypeScript + ESLint + Prettier конфиг (strict, shared) | P0-02 | S | `bun run lint`, `bun run typecheck` зелёные |
 | P0-04 | ✅ DONE (2026-11-07, 024e05b) | CI GitHub Actions: lint+typecheck+test на push/PR | P0-03 | S | workflow-файл, прогон описан в README |
-| P0-05 | ✅ DONE (2026-11-07, 46f165b) | Каркас `apps/web` (React 19 + Vite 7 + TS) c hello-world | P0-02 | S | `pnpm dev` открывает страницу |
+| P0-05 | ✅ DONE (2026-11-07, 46f165b) | Каркас `apps/web` (React 19 + Vite 7 + TS) c hello-world | P0-02 | S | `bun run dev` открывает страницу |
 | P0-06 | ✅ DONE (2026-11-07, 9c1d74b) | Каркас `packages/i18n`: ru/en, `t()`, типобезопасные ключи | P0-03 | S | unit-тест переключения языка |
-| P0-07 | ✅ DONE (2026-11-07, fb634a4) | Vitest-конфиг + первый smoke-тест; скрипт `pnpm test` | P0-03 | S | `pnpm test` зелёный |
+| P0-07 | ✅ DONE (2026-11-07, fb634a4) | Тест-раннер + первый smoke-тест (изначально Vitest, затем `bun test`) | P0-03 | S | тесты зелёные |
 | P0-08 | ✅ DONE (2026-11-07, 2165671) | `docs/ARCHITECTURE.md` — архитектура варианта A (слои, потоки, медиа-конвейер) | P0-03 | S | файл согласован с PLAN §3 |
-| P0-09 | ✅ DONE (2026-11-07, 44221ee) | `scripts/check-prereq.mjs`: проверка Node/pnpm/Go | P0-03 | S | понятные сообщения о версиях |
+| P0-09 | ✅ DONE (2026-11-07, 44221ee) | `scripts/check-prereq.mjs`: проверка тулинга (сейчас Bun/Go/git) | P0-03 | S | понятные сообщения о версиях |
 | P0-10 | ✅ DONE (2026-11-07, a17538c) | README: быстрый старт, ссылки на PLAN/PROPOSALS/RESEARCH | P0-05 | S | README актуален |
 | P0-11 | ✅ DONE (2026-11-07, ae47094) | `AGENTS.md` — краткая инструкция для агентов (читать PLAN, handoff) | P0-01 | S | файл ссылается на PLAN как источник истины |
+| P0-12 | ✅ DONE (2026-11-07, PENDING_HASH) | **Миграция тулинга на Bun**: workspaces + bun.lock, `bun test` + happy-dom вместо Vitest, CI на setup-bun, скрипты/доки | P0-11 | M | `bun install`, `bun test`, `bun run typecheck/lint/build` зелёные; Node/pnpm не используются |
 
 ### P1 — UI-каркас и сценарий (моки, без сети)
 
@@ -580,7 +584,7 @@ pnpm build
 | ID | Статус | Задача | Зависит | Размер | DoD |
 |---|---|---|---|---|---|
 | P7-01 | ☐ | Версионирование и changelog | P6-05 | S | semver и CHANGELOG |
-| P7-02 | ☐ | Прод-сборка web (статика) + инструкция хостинга (GitHub Pages/свой) | P0-05 | M | `pnpm build` + docs |
+| P7-02 | ☐ | Прод-сборка web (статика) + инструкция хостинга (GitHub Pages/свой) | P0-05 | M | `bun run build` + docs |
 | P7-03 | ☐ | Документация пользователя (RU/EN): установка, токен, NAT/STUN, браузеры | P7-02 | M | `docs/USER_GUIDE.md` |
 | P7-04 | ☐ | Демо-видео/скриншоты + README с gif | P7-03 | S | README обновлён |
 | P7-05 | ☐ | Финальный аудит: лицензии, приватность, инструкция по возобновлению | P6-07, P5-12 | S | чек-лист закрыт |
@@ -630,6 +634,10 @@ P5T-01 — сразу после P2 (они де-рискуют проект).
   SegmentedControl, StatusPill, Spinner, Modal) + галерея `#kit` и тесты.
 - 2026-11-07 — **P1-02** готов: экран выбора родного языка (поиск, сохранение в
   localStorage, смена языка UI), интеграция с роутером; тесты. PLAN → v0.7.
+- 2026-11-07 — тулинг мигрирован на **Bun** (D18): workspaces + `bun.lock`,
+  `bun test` + happy-dom вместо Vitest/jsdom, CI на `oven-sh/setup-bun`,
+  скрипты и документация обновлены. `bun install/test/typecheck/lint/build`
+  зелёные. PLAN → v0.8.
 
 **Следующий шаг:** P1-04/P1-05 (экраны создания чата и подключения по токену),
 затем остальные экраны. Перед P3A/P5A/P5T — спайки P3A-01, P5A-01, P5T-01.
@@ -664,6 +672,9 @@ P5T-01 — сразу после P2 (они де-рискуют проект).
   UI-заглушка. PLAN → v0.6.
 - **2026-11-07 · lead** — **P1-03** (UI-кит + дизайн-токены, `#kit`) и
   **P1-02** (экран языка с поиском и persist) готовы; 18 тестов. PLAN → v0.7.
+- **2026-11-07 · lead** — миграция на **Bun** (D18/P0-12): bun workspaces +
+  bun.lock, `bun test` + happy-dom, CI setup-bun, обновлены README/AGENTS/скрипт
+  проверки окружения. 18 тестов зелёные. PLAN → v0.8.
   Следующий шаг: P1-04/P1-05.
 
 ---

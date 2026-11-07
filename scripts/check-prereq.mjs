@@ -1,13 +1,12 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 /**
  * Checks that the local toolchain satisfies the project requirements.
- * Usage: node scripts/check-prereq.mjs
+ * Usage: bun scripts/check-prereq.mjs
  */
 import { execFileSync } from 'node:child_process';
 
 const REQUIRED = {
-  node: { command: process.execPath, args: ['--version'], min: 22, label: 'Node.js' },
-  pnpm: { command: 'pnpm', args: ['--version'], min: 11, label: 'pnpm' },
+  bun: { command: 'bun', args: ['--version'], min: 1.2, label: 'Bun' },
 };
 
 const OPTIONAL = {

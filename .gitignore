@@ -38,3 +38,7 @@ Thumbs.db
 *.log
 npm-debug.log*
 pnpm-debug.log*
+
+# Bun local caches (sandbox workaround)
+.bun-cache/
+.tmp/

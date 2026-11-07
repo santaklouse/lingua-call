@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "dev": "bun x --bun vite",
+    "build": "bun x --bun vite build",
+    "preview": "bun x --bun vite preview",
+    "typecheck": "bun x tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@linguacall/i18n": "workspace:*",

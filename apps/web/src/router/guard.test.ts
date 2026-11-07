@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 import { guard, resolveScreen } from './guard';
 import { createInitialRouterState, routerReducer } from './state';
 import type { RouterState } from './state';
