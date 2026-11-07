@@ -9,6 +9,9 @@ P2P-видеосвязь с автоматическим переводом ре
   data channel.
 - **Речь:** WASM-модели в браузере (streaming-ASR sherpa-onnx/Vosk + MT
   Bergamot), приватно и бесплатно.
+- **Дубляж:** пользователь слышит переведённую речь (sherpa-onnx WASM VITS,
+  piper-голоса ru/en; fallback — голоса ОС), оригинал приглушается через
+  WebAudio. Это главная фича, а не только субтитры.
 - **Выбранный вариант:** A — «всё в браузере» (решение 2026-11-07).
 
 ## Документы
@@ -37,9 +40,10 @@ pnpm build
 
 ## Статус
 
-Bootstrap (P0): репозиторий, pnpm-workspace, TypeScript/ESLint/Prettier,
-Vitest, React+Vite каркас, i18n ru/en. Дальше — UI-экраны (P1), транспорт и
-токены (P2), медиа WebCodecs (P3A), субтитры (P5/P5A).
+Bootstrap (P0) завершён: репозиторий, pnpm-workspace, TypeScript/ESLint/
+Prettier, Vitest, React+Vite каркас, i18n ru/en. Дальше — UI-экраны (P1),
+транспорт и токены (P2), медиа WebCodecs (P3A), субтитры (P5/P5A) и
+дубляж/TTS (P5T).
 
 ## Лицензия
 

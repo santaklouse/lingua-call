@@ -100,14 +100,37 @@ Bergamot — для браузера/маленьких пар; NLLB — тол�
 
 ---
 
-## 4. TTS (опция)
+## 4. TTS (озвучка перевода — обязательная фича MVP)
 
-- Системные голоса: Web Speech Synthesis, Android TTS, AVSpeech — бесплатно,
-  без лицензионных мин.
-- Piper — **GPL-3.0** (с 2025 `piper1-gpl`), Coqui XTTS — CPML (NC). В MVP не
-  берём.
+| Решение | Языки | Размер | Лицензия | Где запускать |
+|---|---|---|---|---|
+| **sherpa-onnx TTS + VITS/piper-модели** | ru, en и десятки других (piper-голоса) | голос ru/en ~60–120 МБ | рантайм Apache-2.0; **piper-voices — MIT** (проверять голос) | браузер WASM, native, Android |
+| Piper standalone (`piper1-gpl`) | ru/en/… | ~20–120 МБ/голос | **GPL-3.0** (код); голоса — MIT | native |
+| Silero TTS | ru, en, es, de, ua | ~50–100 МБ | **CC-BY-NC** (проект некоммерческий — ок) | native/WASM (ONNX) |
+| Kokoro-82M | en, zh (+некоторые) | ~80–160 МБ | Apache-2.0 | браузер (ONNX/WebGPU) |
+| Web Speech Synthesis | голоса ОС | 0 | не OSS, бесплатно | браузер |
+| eSpeak NG | много | ~10 МБ | GPL-3.0 | WASM/native |
 
----
+**Вывод для варианта A:** брать **sherpa-onnx WASM + VITS/piper-голоса ru/en**
+(рантайм уже нужен для ASR; Apache-2.0; голоса MIT; WASM-примеры есть в
+sherpa-onnx `wasm/tts`). Fallback — **Web Speech Synthesis** (голоса ОС), если
+WASM-голос не загрузился/не поддержан. GPL-код Piper standalone не тащим;
+Silero — опция при некоммерческом использовании.
+
+**Дубляж (D17):**
+- TTS запускается на **приёмнике** по финальным сегментам перевода (частичные
+  не озвучиваются); очередь последовательная, короткие сегменты склеиваются.
+- Плейбек через WebAudio (`AudioBufferSourceNode`) → `GainNode`; оригинальный
+  голос собеседника приглушается (ducking) на время озвучки.
+- Echo: `echoCancellation: true` на микрофоне; при отсутствии наушников —
+  ducking и ограничение одновременной озвучки.
+- Задержка TTS: VITS WASM ≈ 0.1–0.6 с на фразу (оценка; проверить в P5T-01).
+- Ссылки: [sherpa-onnx TTS](https://k2-fsa.github.io/sherpa/onnx/tts/index.html) ·
+[WASM TTS assets](https://github.com/k2-fsa/sherpa-onnx/tree/master/wasm/tts) ·
+[piper-voices (MIT)](https://huggingface.co/rhasspy/piper-voices) ·
+[Silero TTS](https://github.com/snakers4/silero-models) ·
+[Kokoro](https://huggingface.co/hexgrad/Kokoro-82M) ·
+[piper1-gpl](https://github.com/OHF-Voice/piper1-gpl)
 
 ## 5. Пайплайн «живых» субтитров
 
