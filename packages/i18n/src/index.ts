@@ -8,7 +8,9 @@ export const en = {
   'app.title': 'LinguaCall',
   'app.tagline': 'P2P video calls with real-time speech translation',
   'language.title': 'Your native language',
-  'language.description': 'Subtitles will be shown in this language.',
+  'language.description': 'Subtitles and dubbing will be in this language.',
+  'language.search': 'Search languages',
+  'language.noResults': 'No languages found',
   'language.continue': 'Continue',
   'chat.title': 'Start a call',
   'chat.create': 'Create a chat',
@@ -27,7 +29,9 @@ export const ru: Record<MessageKey, string> = {
   'app.title': 'LinguaCall',
   'app.tagline': 'P2P-видеосвязь с переводом речи в реальном времени',
   'language.title': 'Ваш родной язык',
-  'language.description': 'На этом языке будут показываться субтитры.',
+  'language.description': 'На этом языке будут субтитры и озвучка перевода.',
+  'language.search': 'Поиск языков',
+  'language.noResults': 'Языки не найдены',
   'language.continue': 'Продолжить',
   'chat.title': 'Начать звонок',
   'chat.create': 'Создать чат',
@@ -41,6 +45,12 @@ export const ru: Record<MessageKey, string> = {
 };
 
 export const messages: Record<Language, Record<MessageKey, string>> = { ru, en };
+
+/** Native and English names of every supported language. */
+export const LANGUAGE_NAMES: Record<Language, { native: string; english: string }> = {
+  ru: { native: 'Русский', english: 'Russian' },
+  en: { native: 'English', english: 'English' },
+};
 
 export type MessageParams = Record<string, string | number>;
 
