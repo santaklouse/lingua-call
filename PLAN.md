@@ -335,8 +335,8 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 | P1-03 | ✅ DONE (2026-11-07, 5ba167a) | Design tokens + base UI kit | P0-05 | kit + `#kit` gallery + tests |
 | P1-04 | ✅ DONE (2026-11-07, 230f917) | Create-chat screen (mock token, share link) | P1-01 | token copied, link generated |
 | P1-05 | ✅ DONE (2026-11-07, 230f917) | Join-by-token screen (validation, hash prefill) | P1-01 | clear validation errors |
-| P1-06 | ✅ DONE (2026-11-07, TUNNEL_HASH) | Devices screen: real camera preview, device selects, mic level, loopback, permission errors | P1-01 | device choice kept in state |
-| P1-07 | ✅ DONE (2026-11-07, TUNNEL_HASH) | Call layout: remote video, local PiP, subtitle overlay, controls, sidebar widgets | P1-01 | layout used by the call screen |
+| P1-06 | ✅ DONE (2026-11-07, dfc821e) | Devices screen: real camera preview, device selects, mic level, loopback, permission errors | P1-01 | device choice kept in state |
+| P1-07 | ✅ DONE (2026-11-07, dfc821e) | Call layout: remote video, local PiP, subtitle overlay, controls, sidebar widgets | P1-01 | layout used by the call screen |
 | P1-08 | ☐ TODO | Subtitle component (original/translated, partial/final) | P1-07 | render-state tests |
 | P1-09 | ☐ TODO | Subtitle + dubbing settings panel | P1-08 | settings applied & persisted |
 | P1-10 | ☐ TODO | Session state machine (idle→lobby→devices→call→ended) | P0-03 | transition tests |
@@ -376,11 +376,11 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 
 | ID | Status | Task | Depends | DoD |
 |---|---|---|---|---|
-| P4-01 | ✅ DONE (2026-11-07, TUNNEL_HASH) | `enumerateDevices` + permissions + denial handling | P1-06 | permission states in UI |
-| P4-02 | ✅ DONE (2026-11-07, TUNNEL_HASH) | Real camera preview on the devices screen | P4-01 | preview works |
-| P4-03 | ✅ DONE (2026-11-07, TUNNEL_HASH) | Mic level meter + "hear yourself" loopback test | P4-01 | level moves, loopback works |
-| P4-04 | ✅ DONE (2026-11-07, TUNNEL_HASH) | Persist chosen devices + `devicechange` handling | P4-02 | devices switch without reload |
-| P4-05 | ✅ DONE (2026-11-07, TUNNEL_HASH) | Error states: none/busy/denied/no-permission | P4-01 | 4 scenarios tested |
+| P4-01 | ✅ DONE (2026-11-07, dfc821e) | `enumerateDevices` + permissions + denial handling | P1-06 | permission states in UI |
+| P4-02 | ✅ DONE (2026-11-07, dfc821e) | Real camera preview on the devices screen | P4-01 | preview works |
+| P4-03 | ✅ DONE (2026-11-07, dfc821e) | Mic level meter + "hear yourself" loopback test | P4-01 | level moves, loopback works |
+| P4-04 | ✅ DONE (2026-11-07, dfc821e) | Persist chosen devices + `devicechange` handling | P4-02 | devices switch without reload |
+| P4-05 | ✅ DONE (2026-11-07, dfc821e) | Error states: none/busy/denied/no-permission | P4-01 | 4 scenarios tested |
 | P4-06 | ☐ TODO | Constraint profiles (720p/30, 480p/15) | P4-02 | profiles applied |
 | P4-07 | ☐ TODO | Device switching during a call, mute/camera off | P4-04, P1-07 | no call loss |
 
@@ -408,8 +408,8 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 | P7-04 | ☐ TODO | Demo video/screenshots + README gif | P7-03 | README updated |
 | P7-05 | ☐ TODO | Final audit: licenses, privacy, handoff instructions | P6-07, P5P-10 | checklist closed |
 | P7-06 | ☐ TODO | Clean-clone check: clone → install → test → build | P7-02 | reproducible build |
-| P7-07 | ✅ DONE (2026-11-07, TUNNEL_HASH) | Dockerfile (Bun build → nginx) + SPA nginx config + healthcheck | P7-02 | `docker compose up web` serves the app |
-| P7-08 | ✅ DONE (2026-11-07, TUNNEL_HASH) | `docker-compose.yml` with Cloudflare Tunnel profile + `docs/TUNNEL.md`/`.RU.md` step-by-step dashboard guide | P7-07 | HTTPS URL works, instructions verified |
+| P7-07 | ✅ DONE (2026-11-07, dfc821e) | Dockerfile (Bun build → nginx) + SPA nginx config + healthcheck | P7-02 | `docker compose up web` serves the app |
+| P7-08 | ✅ DONE (2026-11-07, dfc821e) | `docker-compose.yml` with Cloudflare Tunnel profile + `docs/TUNNEL.md`/`.RU.md` step-by-step dashboard guide | P7-07 | HTTPS URL works, instructions verified |
 
 ### Deferred (not now)
 
