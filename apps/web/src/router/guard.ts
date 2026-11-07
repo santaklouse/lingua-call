@@ -16,35 +16,35 @@ export function guard(state: RouterState, target: Screen): GuardResult {
     return {
       allowed: false,
       screen: 'call',
-      reason: 'Сначала завершите звонок',
+      reason: 'Finish the current call first',
     };
   }
 
   if (target === 'lobby') {
     return state.nativeLanguage === null
-      ? { allowed: false, screen: 'language', reason: 'Сначала выберите родной язык' }
+      ? { allowed: false, screen: 'language', reason: 'Choose your native language first' }
       : { allowed: true, screen: 'lobby' };
   }
 
   if (target === 'devices') {
     if (state.nativeLanguage === null) {
-      return { allowed: false, screen: 'language', reason: 'Сначала выберите родной язык' };
+      return { allowed: false, screen: 'language', reason: 'Choose your native language first' };
     }
     return state.transportReady
       ? { allowed: true, screen: 'devices' }
-      : { allowed: false, screen: 'lobby', reason: 'Сначала создайте чат или подключитесь по токену' };
+      : { allowed: false, screen: 'lobby', reason: 'Create or join a chat first' };
   }
 
   if (target === 'call') {
     if (state.nativeLanguage === null) {
-      return { allowed: false, screen: 'language', reason: 'Сначала выберите родной язык' };
+      return { allowed: false, screen: 'language', reason: 'Choose your native language first' };
     }
     if (!state.transportReady) {
-      return { allowed: false, screen: 'lobby', reason: 'Нет соединения с собеседником' };
+      return { allowed: false, screen: 'lobby', reason: 'Not connected to the peer' };
     }
     return state.devicesReady
       ? { allowed: true, screen: 'call' }
-      : { allowed: false, screen: 'devices', reason: 'Проверьте камеру и микрофон' };
+      : { allowed: false, screen: 'devices', reason: 'Check your camera and microphone' };
   }
 
   if (target === 'manual-call') {

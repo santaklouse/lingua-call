@@ -16,7 +16,7 @@ describe('router guards', () => {
     expect(guard(state(), 'lobby')).toEqual({
       allowed: false,
       screen: 'language',
-      reason: 'Сначала выберите родной язык',
+      reason: 'Choose your native language first',
     });
     expect(guard(state({ nativeLanguage: 'en' }), 'lobby')).toEqual({
       allowed: true,
@@ -37,7 +37,7 @@ describe('router guards', () => {
     expect(guard(connected, 'call')).toEqual({
       allowed: false,
       screen: 'devices',
-      reason: 'Проверьте камеру и микрофон',
+      reason: 'Check your camera and microphone',
     });
     expect(guard({ ...connected, devicesReady: true }, 'call')).toEqual({
       allowed: true,
@@ -56,7 +56,7 @@ describe('router guards', () => {
     expect(guard(inCall, 'lobby')).toEqual({
       allowed: false,
       screen: 'call',
-      reason: 'Сначала завершите звонок',
+      reason: 'Finish the current call first',
     });
     expect(guard(inCall, 'ended')).toEqual({ allowed: true, screen: 'ended' });
     expect(guard(inCall, 'call')).toEqual({ allowed: true, screen: 'call' });
