@@ -2,6 +2,7 @@ import { Button, Card, ScreenShell, StatusPill } from './ui';
 import { LanguageScreen } from './screens/LanguageScreen';
 import { LobbyScreen } from './screens/LobbyScreen';
 import { ManualCallScreen } from './screens/ManualCallScreen';
+import { TranslateDemoScreen } from './screens/TranslateDemoScreen';
 import { RouterProvider, useRouter } from './router/context';
 import type { Screen } from './router/state';
 
@@ -9,6 +10,7 @@ const SCREEN_TITLES: Record<Screen, string> = {
   language: '1. Native language',
   lobby: '2. Create or join a chat',
   'manual-call': 'Simple WebRTC call',
+  'translate-demo': 'Live translation demo',
   devices: '3. Camera and microphone',
   call: '4. Call',
   ended: 'Call ended',
@@ -97,6 +99,7 @@ function CurrentScreen() {
   if (state.screen === 'language') return <LanguageScreen />;
   if (state.screen === 'lobby') return <LobbyScreen />;
   if (state.screen === 'manual-call') return <ManualCallScreen />;
+  if (state.screen === 'translate-demo') return <TranslateDemoScreen />;
   return <ScreenStub />;
 }
 

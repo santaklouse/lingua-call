@@ -47,6 +47,12 @@ export function guard(state: RouterState, target: Screen): GuardResult {
       : { allowed: false, screen: 'devices', reason: 'Check your camera and microphone' };
   }
 
+  if (target === 'translate-demo') {
+    return state.nativeLanguage === null
+      ? { allowed: false, screen: 'language', reason: 'Choose your native language first' }
+      : { allowed: true, screen: 'translate-demo' };
+  }
+
   if (target === 'manual-call') {
     return state.nativeLanguage === null
       ? { allowed: false, screen: 'language', reason: 'Choose your native language first' }

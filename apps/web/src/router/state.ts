@@ -1,7 +1,15 @@
 import type { Language } from '@linguacall/i18n';
 
 /** Screens of the call flow, in order. */
-export const SCREENS = ['language', 'lobby', 'manual-call', 'devices', 'call', 'ended'] as const;
+export const SCREENS = [
+  'language',
+  'lobby',
+  'manual-call',
+  'translate-demo',
+  'devices',
+  'call',
+  'ended',
+] as const;
 
 export type Screen = (typeof SCREENS)[number];
 

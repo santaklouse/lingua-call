@@ -7,6 +7,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@linguacall/i18n': resolve(import.meta.dirname, '../../packages/i18n/src/index.ts'),
+      '@linguacall/translation': resolve(
+        import.meta.dirname,
+        '../../packages/translation/src/index.ts',
+      ),
     },
   },
   server: {

@@ -74,6 +74,18 @@ describe('router guards', () => {
     });
   });
 
+  it('requires a native language before the translation demo', () => {
+    expect(guard(state(), 'translate-demo')).toEqual({
+      allowed: false,
+      screen: 'language',
+      reason: 'Choose your native language first',
+    });
+    expect(guard(state({ nativeLanguage: 'en' }), 'translate-demo')).toEqual({
+      allowed: true,
+      screen: 'translate-demo',
+    });
+  });
+
   it('resolves a safe screen through resolveScreen', () => {
     expect(resolveScreen(state(), 'call')).toBe('language');
     expect(resolveScreen(state({ nativeLanguage: 'en', transportReady: true }), 'devices')).toBe(
