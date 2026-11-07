@@ -68,6 +68,11 @@ export function createChromeTranslator(): MtEngine {
     id: 'chrome-translator',
     pairs,
     supports: (source, target) => pairs.some(([from, to]) => from === source && to === target),
+    async warmup() {
+      // Best-effort: pre-create both translators so the first phrase does not pay
+      // the model-load cost.
+      await Promise.all(pairs.map(([from, to]) => instance(from, to).catch(() => null)));
+    },
     async translate(text, source, target) {
       const translator = await instance(source, target);
       return translator.translate(text);

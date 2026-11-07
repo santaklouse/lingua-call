@@ -5,8 +5,8 @@ import {
   LatencyRecorder,
   TranslationPipeline,
 } from '@linguacall/translation';
-import type { PipelineState, Segment, TtsEngine } from '@linguacall/translation';
-import { Button, Card, ScreenShell, StatusPill, Switch } from '../ui';
+import type { PipelineState, Segment, TtsEngine, VoiceGender } from '@linguacall/translation';
+import { Button, Card, ScreenShell, SegmentedControl, StatusPill, Switch } from '../ui';
 import { useRouter } from '../router/context';
 import { UnsupportedEngineError } from '../translation/engines/errors';
 import {
@@ -21,6 +21,8 @@ import {
   createWebSpeechTts,
   isWebSpeechTtsSupported,
 } from '../translation/engines/web-speech-tts';
+import { startMicPitchTracker } from '../translation/mic-pitch';
+import type { PitchTracker } from '../translation/mic-pitch';
 
 const STAGES = ['asr', 'mt', 'tts', 'e2e'] as const;
 const STAGE_LABELS: Record<(typeof STAGES)[number], MessageKey> = {
@@ -28,6 +30,14 @@ const STAGE_LABELS: Record<(typeof STAGES)[number], MessageKey> = {
   mt: 'translate.stage.mt',
   tts: 'translate.stage.tts',
   e2e: 'translate.stage.e2e',
+};
+
+type VoiceMode = 'auto' | 'female' | 'male';
+
+const GENDER_LABELS: Record<VoiceGender, MessageKey> = {
+  male: 'translate.voice.male',
+  female: 'translate.voice.female',
+  unknown: 'translate.voice.unknown',
 };
 
 const STATE_LABELS: Record<PipelineState, MessageKey> = {
@@ -64,6 +74,8 @@ export function TranslateDemoScreen() {
   const [source, setSource] = useState<Language>(otherLanguage(nativeLanguage));
   const [target, setTarget] = useState<Language>(nativeLanguage);
   const [dubbing, setDubbing] = useState(true);
+  const [voiceMode, setVoiceMode] = useState<VoiceMode>('auto');
+  const [detectedGender, setDetectedGender] = useState<VoiceGender>('unknown');
   const [status, setStatus] = useState<PipelineState>('idle');
   const [partial, setPartial] = useState('');
   const [segments, setSegments] = useState<Segment[]>([]);
@@ -71,11 +83,15 @@ export function TranslateDemoScreen() {
   const [latencyVersion, setLatencyVersion] = useState(0);
 
   const pipelineRef = useRef<TranslationPipeline | null>(null);
+  const trackerRef = useRef<PitchTracker | null>(null);
+  const detectedGenderRef = useRef<VoiceGender>('unknown');
   const latencyRef = useRef<LatencyRecorder>(new LatencyRecorder());
   const running = status !== 'idle';
 
   useEffect(() => {
     return () => {
+      trackerRef.current?.stop();
+      trackerRef.current = null;
       void pipelineRef.current?.stop();
       pipelineRef.current = null;
     };
@@ -96,6 +112,8 @@ export function TranslateDemoScreen() {
         targetLanguage: target,
         dubbing: dubbing && ttsSupported,
         latency: latencyRef.current,
+        getVoiceGender: () =>
+          voiceMode === 'auto' ? detectedGenderRef.current : voiceMode,
         onPartial: (text) => setPartial(text),
         onSegment: (segment) => {
           setPartial('');
@@ -110,6 +128,16 @@ export function TranslateDemoScreen() {
       });
       pipelineRef.current = pipeline;
       await pipeline.start();
+      // Speaker-gender estimation runs in parallel with recognition and selects
+      // a matching TTS voice. Failure is non-fatal (voice stays default).
+      try {
+        trackerRef.current = await startMicPitchTracker((gender) => {
+          detectedGenderRef.current = gender;
+          setDetectedGender(gender);
+        });
+      } catch {
+        trackerRef.current = null;
+      }
     } catch (cause) {
       setStatus('idle');
       setError(
@@ -123,6 +151,8 @@ export function TranslateDemoScreen() {
   };
 
   const stop = async () => {
+    trackerRef.current?.stop();
+    trackerRef.current = null;
     await pipelineRef.current?.stop();
     pipelineRef.current = null;
     setStatus('idle');
@@ -203,6 +233,23 @@ export function TranslateDemoScreen() {
             {t('translate.swap')}
           </Button>
           <Switch checked={dubbing} onChange={setDubbing} label={t('translate.dubbing')} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: 'var(--color-text-muted)' }}>{t('translate.voice.label')}</span>
+            <SegmentedControl
+              label={t('translate.voice.label')}
+              value={voiceMode}
+              options={[
+                { value: 'auto', label: t('translate.voice.auto') },
+                { value: 'female', label: t('translate.voice.female') },
+                { value: 'male', label: t('translate.voice.male') },
+              ]}
+              onChange={setVoiceMode}
+            />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: 'var(--color-text-muted)' }}>{t('translate.voice.detected')}</span>
+            <strong>{t(GENDER_LABELS[detectedGender])}</strong>
+          </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <StatusPill tone={tone}>{t(STATE_LABELS[status])}</StatusPill>
             {running ? (

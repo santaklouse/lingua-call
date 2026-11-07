@@ -21,3 +21,5 @@ export { LatencyRecorder } from './latency';
 export type { LatencyStage, StageLatency } from './latency';
 export { EnergyVadSegmenter, frameRms } from './vad';
 export type { VadEvent, VadOptions } from './vad';
+export { GenderEstimator, estimatePitchHz } from './voice';
+export type { GenderEstimatorOptions, PitchOptions, VoiceGender } from './voice';

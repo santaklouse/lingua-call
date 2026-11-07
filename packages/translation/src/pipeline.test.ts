@@ -3,10 +3,12 @@ import { LatencyRecorder } from './latency';
 import { TranslationPipeline } from './pipeline';
 import type { AsrEngine, AsrResult, MtEngine, Segment, TtsEngine } from './types';
 
-function createEngines() {
+function createEngines(speakImpl?: (text: string) => Promise<void>) {
   let asrResult: ((result: AsrResult) => void) | null = null;
   const translations: string[] = [];
   const spoken: string[] = [];
+  const warmups: string[] = [];
+  const speakOptions: Array<{ gender?: string }> = [];
   let cancelled = 0;
 
   const asr: AsrEngine = {
@@ -27,6 +29,9 @@ function createEngines() {
       ['en', 'ru'],
     ],
     supports: () => true,
+    async warmup() {
+      warmups.push('mt');
+    },
     async translate(text) {
       translations.push(text);
       return `[en] ${text}`;
@@ -37,8 +42,13 @@ function createEngines() {
     id: 'test-tts',
     languages: ['ru', 'en'],
     supports: () => true,
-    async speak(text) {
+    async warmup() {
+      warmups.push('tts');
+    },
+    async speak(text, _language, options) {
       spoken.push(text);
+      speakOptions.push({ gender: options?.gender });
+      if (speakImpl !== undefined) await speakImpl(text);
     },
     cancel() {
       cancelled += 1;
@@ -52,6 +62,8 @@ function createEngines() {
     },
     translations,
     spoken,
+    warmups,
+    speakOptions,
     get cancelled() {
       return cancelled;
     },
@@ -61,8 +73,10 @@ function createEngines() {
 function createPipeline(overrides?: {
   dubbing?: boolean;
   latency?: LatencyRecorder;
+  ttsSpeak?: (text: string) => Promise<void>;
+  voiceGender?: 'male' | 'female' | 'unknown';
 }) {
-  const harness = createEngines();
+  const harness = createEngines(overrides?.ttsSpeak);
   let clock = 0;
   const segments: Segment[] = [];
   const partials: string[] = [];
@@ -73,6 +87,7 @@ function createPipeline(overrides?: {
     targetLanguage: 'en',
     dubbing: overrides?.dubbing ?? true,
     latency: overrides?.latency,
+    getVoiceGender: () => overrides?.voiceGender ?? 'unknown',
     now: () => {
       clock += 10;
       return clock;
@@ -126,6 +141,40 @@ describe('TranslationPipeline', () => {
     await pipeline.stop();
     expect(harness.cancelled).toBeGreaterThan(0);
     expect(harness.asrResult).toBeNull();
+  });
+
+  it('warms up engines before listening', async () => {
+    const { pipeline, harness } = createPipeline();
+    await pipeline.start();
+    expect(harness.warmups).toEqual(['mt', 'tts']);
+  });
+
+  it('passes the detected speaker gender to TTS', async () => {
+    const { pipeline, harness } = createPipeline({ voiceGender: 'female' });
+    await pipeline.start();
+    harness.asrResult?.({ segmentId: 1, text: 'privet', final: true, atMs: 100 });
+    await pipeline.whenIdle();
+    expect(harness.speakOptions[0]?.gender).toBe('female');
+  });
+
+  it('emits subtitles before speech playback finishes', async () => {
+    const speech: { finish: (() => void) | null } = { finish: null };
+    const { pipeline, harness, segments } = createPipeline({
+      ttsSpeak: () =>
+        new Promise<void>((resolve) => {
+          speech.finish = resolve;
+        }),
+    });
+    await pipeline.start();
+    harness.asrResult?.({ segmentId: 1, text: 'privet', final: true, atMs: 100 });
+
+    // Wait for MT + segment emission while TTS is still pending.
+    for (let i = 0; i < 20 && segments.length === 0; i += 1) await new Promise((r) => setTimeout(r, 0));
+    expect(segments).toHaveLength(1);
+    expect(harness.spoken).toEqual(['[en] privet']);
+
+    speech.finish?.();
+    await pipeline.whenIdle();
   });
 
   it('reports MT errors and keeps running', async () => {
