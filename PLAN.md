@@ -15,8 +15,8 @@
 >   used (D18).
 > - **Documentation policy:** English is primary; Russian mirrors are kept as
 >   `*.RU.md` (D21). All code comments are English.
-> - Version: `v1.3` · Last update: **2026-11-07**
-> - **Next step: P5P-08** (dubbing audio graph: duck the original, mix translated voice), then P5P-09 (latency tuning). **P5P-03…P5P-07 are done — the live demo is testable now.**
+> - Version: `v1.4` · Last update: **2026-11-07**
+> - **Next step: P5P-08** (dubbing audio graph: duck the original, mix translated voice), then P5P-09 (measure and tune latency to the D23 budget). **P5P-03…P5P-07, P5P-11, P5P-12 are done — the demo is testable now, including speaker-gender voice matching.**
 
 ---
 
@@ -366,7 +366,9 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 | P5P-06 | ✅ DONE (2026-11-07, cabf178) | Pipeline orchestration: ASR→MT→subtitle+TTS; per-stage latency recorder | P5P-02…P5P-05 | mock-engine pipeline tests |
 | P5P-07 | ✅ DONE (2026-11-07, cabf178) | Live translation demo screen (mic → subtitles → dubbed voice, latency panel) | P5P-06 | real demo works |
 | P5P-08 | ☐ TODO | Dubbing audio graph: duck remote original, mix translated voice, echo safety | P5P-05, P5P-07 | both voices mixed correctly |
-| P5P-09 | ☐ TODO | Latency tuning to budget (D23): chunking, throttling, endpointing | P5P-06 | measured p50/p90 in `docs/PERF.md` |
+| P5P-09 | ☐ TODO | Measure and tune to the latency budget (D23): chunking, throttling, endpointing; record p50/p90 in `docs/PERF.md` | P5P-06 | measured p50/p90 in `docs/PERF.md` |
+| P5P-11 | ✅ DONE (2026-11-07, 54dacdc) | Speaker-gender estimation from mic (pitch) + gender-aware TTS voice selection (auto/female/male) | P5P-05 | voice matches the speaker; tests |
+| P5P-12 | ✅ DONE (2026-11-07, 54dacdc) | Latency optimizations: engine warmup, background MT prefetch for stable partials, decoupled single-slot speech queue (subtitles not blocked by dubbing) | P5P-06 | segment emitted before TTS finishes; tests |
 | P5P-10 | ☐ TODO | Error/degradation states: no engine/no mic/unsupported browser; subtitles-only mode | P5P-03…P5P-06 | 4 scenarios covered |
 
 ### P4 — Devices, permissions, camera/mic checks
@@ -426,9 +428,12 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 lobby → "Live translation demo" → speak into the mic → see subtitles and hear
 the translated speech, with per-stage latency metrics. It uses prototype browser
 engines (Web Speech ASR, Chrome Translator, Web Speech Synthesis) and is
-**testable in Chrome/Edge now** (`bun run dev`). The temporary manual-WebRTC call
-(copyable SDP codes) also works. Next: P5P-08 (ducking the original while the
-translation plays) and P5P-09 (latency tuning).
+**testable in Chrome/Edge now** (`bun run dev`). Dubbing picks a TTS voice that
+matches the speaker's gender (pitch estimation from the mic; can be overridden
+with Voice: Auto/Female/Male). Latency improvements: engine warmup, background
+translation prefetch and a decoupled speech queue. The temporary manual-WebRTC
+call (copyable SDP codes) also works. Next: P5P-08 (ducking the original while
+the translation plays) and P5P-09 (measurement/tuning).
 
 **Done:**
 - 2026-11-07 — research: `go-p2p-netcat` has no media tracks; data channel is
@@ -448,11 +453,12 @@ translation plays) and P5P-09 (latency tuning).
   noise floor, min/max utterance limits, flush/reset and 12 unit tests.
 - 2026-11-07 — P5P-03…P5P-07 complete: Web Speech ASR, Chrome Translator MT,
   Web Speech Synthesis TTS, `TranslationPipeline` with per-stage latency metrics,
-  and the **live translation demo screen** reachable from the lobby. 51 tests.
-  The demo is now testable in Chrome/Edge (`bun run dev`, lobby → "Live
-  translation demo").
+  and the **live translation demo screen** reachable from the lobby.
+- 2026-11-07 — P5P-11/P5P-12 complete: speaker-gender detection (pitch) and
+  gender-aware TTS voice selection; engine warmup, MT prefetch and decoupled
+  speech queue reduce perceived latency. 62 tests green.
 
-**Next step:** P5P-08 (dubbing audio graph) → P5P-09 (latency tuning).
+**Next step:** P5P-08 (dubbing audio graph) → P5P-09 (measurement/tuning).
 
 **Known issues / blockers:**
 - Manual transport has no reconnect and fails on symmetric NAT (acceptable for
@@ -484,8 +490,10 @@ Format: `YYYY-MM-DD · author · what was done · next step`.
   segment/latency types, capability manifest; 32 tests.
 - **2026-11-07 · lead** — P5P-02 complete: energy VAD segmenter + tests (41 total).
 - **2026-11-07 · lead** — P5P-03…P5P-07 complete: prototype engines + pipeline +
-  live demo screen; 51 tests. Demo is testable in Chrome/Edge. Next: P5P-08
-  (dubbing audio graph/ducking), P5P-09 (latency tuning).
+  live demo screen; 51 tests. Demo is testable in Chrome/Edge.
+- **2026-11-07 · lead** — P5P-11/P5P-12 complete: speaker-gender voice matching
+  (pitch estimator + gender-aware TTS voice), engine warmup, MT prefetch,
+  decoupled speech queue; 62 tests. Next: P5P-08 (ducking), P5P-09 (measurement).
 
 ---
 
