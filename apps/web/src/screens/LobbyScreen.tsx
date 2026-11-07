@@ -5,10 +5,52 @@ import { Button, Card, ScreenShell, StatusPill, TextField, TokenField } from '..
 import { useRouter } from '../router/context';
 import {
   createMockToken,
-  readTokenFromHash,
   shareLinkForToken,
   validateToken,
 } from '../token/token';
+import { clearSession, loadSession, saveSession } from '../storage/session';
+import { legacyTokenFromHash, parseHash } from '../router/url';
+
+const LOBBY_SESSION_KEY = 'linguacall.lobby';
+
+type LobbySession = {
+  mode: Mode;
+  token: string | null;
+  input: string;
+};
+
+function readInitialLobby(): LobbySession {
+  let pendingInvite: string | null = null;
+  try {
+    pendingInvite = window.sessionStorage.getItem('linguacall.pendingInvite');
+    if (pendingInvite !== null) window.sessionStorage.removeItem('linguacall.pendingInvite');
+  } catch {
+    pendingInvite = null;
+  }
+  const route = parseHash(window.location.hash);
+  const fromRoute =
+    pendingInvite ??
+    route?.params['token'] ??
+    legacyTokenFromHash(window.location.hash) ??
+    null;
+  if (fromRoute !== null && fromRoute.length > 0) {
+    const state: LobbySession = { mode: 'join', token: null, input: fromRoute };
+    saveSession(LOBBY_SESSION_KEY, state);
+    return state;
+  }
+  const saved = loadSession<LobbySession>(LOBBY_SESSION_KEY, (value) => {
+    if (typeof value !== 'object' || value === null) return null;
+    const record = value as Record<string, unknown>;
+    const mode = record['mode'];
+    if (mode !== 'create' && mode !== 'join' && mode !== 'choice') return null;
+    return {
+      mode,
+      token: typeof record['token'] === 'string' ? record['token'] : null,
+      input: typeof record['input'] === 'string' ? record['input'] : '',
+    };
+  });
+  return saved ?? { mode: 'choice', token: null, input: '' };
+}
 
 type Mode = 'choice' | 'create' | 'join';
 
@@ -22,19 +64,20 @@ export function LobbyScreen() {
   const { state, dispatch, go } = useRouter();
   const t = createTranslator(state.nativeLanguage ?? 'en');
 
-  const [mode, setMode] = useState<Mode>('choice');
-  const [token, setToken] = useState<string | null>(null);
-  const [input, setInput] = useState('');
+  const initial = readInitialLobby();
+  const [mode, setMode] = useState<Mode>(initial.mode);
+  const [token, setToken] = useState<string | null>(initial.token);
+  const [input, setInput] = useState(initial.input);
   const [pendingNavigate, setPendingNavigate] = useState(false);
 
-  // Invite links open as #token=pnc1_… and land straight in the join panel.
+  // Persist the lobby panel so a refresh keeps the invite/join state.
   useEffect(() => {
-    const fromHash = readTokenFromHash(window.location.hash);
-    if (fromHash !== null) {
-      setInput(fromHash);
-      setMode('join');
+    if (mode === 'choice') {
+      clearSession(LOBBY_SESSION_KEY);
+      return;
     }
-  }, []);
+    saveSession(LOBBY_SESSION_KEY, { mode, token, input } satisfies LobbySession);
+  }, [mode, token, input]);
 
   useEffect(() => {
     if (pendingNavigate && state.transportReady) {
@@ -60,6 +103,7 @@ export function LobbyScreen() {
 
   const join = () => {
     if (validation?.valid !== true) return;
+    clearSession(LOBBY_SESSION_KEY);
     dispatch({ type: 'setTransportReady', ready: true });
     setPendingNavigate(true);
   };

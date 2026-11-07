@@ -26,6 +26,7 @@ import { otherLanguage } from '../translation/languages';
 import { startStreamPitchTracker } from '../translation/pitch-tracker';
 import type { PitchTracker } from '../translation/pitch-tracker';
 import { DebugLogger } from '../debug/logger';
+import { clearSession, loadSession, saveSession } from '../storage/session';
 import type { DebugEntry, DebugLevel } from '../debug/logger';
 import { createWebSpeechAsr, isWebSpeechAsrSupported } from '../translation/engines/web-speech-asr';
 import {
@@ -53,6 +54,35 @@ type SessionHandle = {
   channel: Promise<RTCDataChannel>;
   dispose: () => void;
 };
+
+const CALL_SESSION_KEY = 'linguacall.call';
+
+type CallSnapshot = {
+  entry: Entry;
+  quickCode: string;
+  quickInput: string;
+  manualStage: ManualStage;
+};
+
+function readInitialCallSnapshot(): CallSnapshot {
+  const saved = loadSession<CallSnapshot>(CALL_SESSION_KEY, (value) => {
+    if (typeof value !== 'object' || value === null) return null;
+    const record = value as Record<string, unknown>;
+    const entry = record['entry'];
+    const manualStage = record['manualStage'];
+    if (entry !== 'none' && entry !== 'quick' && entry !== 'manual') return null;
+    if (manualStage !== 'host' && manualStage !== 'guest' && manualStage !== 'guest-answer') {
+      return null;
+    }
+    return {
+      entry,
+      quickCode: typeof record['quickCode'] === 'string' ? record['quickCode'] : '',
+      quickInput: typeof record['quickInput'] === 'string' ? record['quickInput'] : '',
+      manualStage,
+    };
+  });
+  return saved ?? { entry: 'none', quickCode: '', quickInput: '', manualStage: 'host' };
+}
 
 const GENDER_LABELS: Record<VoiceGender, MessageKey> = {
   male: 'translate.voice.male',
@@ -92,13 +122,15 @@ export function ManualCallScreen() {
     loggerRef.current.log(level, message);
   }, []);
 
-  const [entry, setEntry] = useState<Entry>('none');
+  const initialSnapshot = readInitialCallSnapshot();
+  const [entry, setEntry] = useState<Entry>(initialSnapshot.entry);
   const [mode, setMode] = useState<Mode | null>(null);
   const [sessionState, setSessionState] = useState<SessionState>('idle');
-  const [manualStage, setManualStage] = useState<ManualStage>('host');
+  const [manualStage, setManualStage] = useState<ManualStage>(initialSnapshot.manualStage);
+  const [restored] = useState(initialSnapshot.entry !== 'none');
 
-  const [quickCode, setQuickCode] = useState('');
-  const [quickInput, setQuickInput] = useState('');
+  const [quickCode, setQuickCode] = useState(initialSnapshot.quickCode);
+  const [quickInput, setQuickInput] = useState(initialSnapshot.quickInput);
   const [roomCopied, setRoomCopied] = useState(false);
 
   const [offerCode, setOfferCode] = useState('');
@@ -120,6 +152,7 @@ export function ManualCallScreen() {
   const [dubbing, setDubbing] = useState(true);
   const [dubbingActive, setDubbingActive] = useState(false);
   const [remoteGender, setRemoteGender] = useState<VoiceGender>('unknown');
+  const [voiceMode, setVoiceMode] = useState<'auto' | 'female' | 'male'>('auto');
 
   const sessionRef = useRef<SessionHandle | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -139,6 +172,20 @@ export function ManualCallScreen() {
   const peerLanguageRef = useRef<Language>(otherLanguage(localLanguage));
 
   useEffect(() => loggerRef.current.subscribe(setLogs), []);
+
+  // Remember the call screen/room inputs so F5 restores them.
+  useEffect(() => {
+    if (entry === 'none') {
+      clearSession(CALL_SESSION_KEY);
+      return;
+    }
+    saveSession(CALL_SESSION_KEY, {
+      entry,
+      quickCode,
+      quickInput,
+      manualStage,
+    } satisfies CallSnapshot);
+  }, [entry, quickCode, quickInput, manualStage]);
 
   useEffect(() => {
     log('info', `Call screen ready: origin=${window.location.origin} secureContext=${String(window.isSecureContext)}`);
@@ -175,7 +222,9 @@ export function ManualCallScreen() {
       mixerRef.current?.duck(true);
       log('debug', 'Dubbing: ducking original audio');
       try {
-        await tts.speak(text, localLanguage, { gender: remoteGenderRef.current });
+        await tts.speak(text, localLanguage, {
+          gender: voiceMode === 'auto' ? remoteGenderRef.current : voiceMode,
+        });
       } catch (cause) {
         log('warn', `Dubbing failed: ${cause instanceof Error ? cause.message : String(cause)}`);
       } finally {
@@ -489,6 +538,7 @@ export function ManualCallScreen() {
   );
 
   const hangup = () => {
+    clearSession(CALL_SESSION_KEY);
     cleanupCall();
     sessionRef.current?.dispose();
     sessionRef.current = null;
@@ -498,12 +548,12 @@ export function ManualCallScreen() {
     log('info', 'Call ended');
   };
 
-  const beginQuickHost = async () => {
+  const beginQuickHost = async (codeOverride?: string) => {
     setError(null);
     setEntry('quick');
     setMode('quick-host');
     setSessionState('preparing');
-    const code = createRoomCode();
+    const code = codeOverride ?? createRoomCode();
     setQuickCode(code);
     log('info', `Creating quick room ${code}`);
     try {
@@ -794,6 +844,22 @@ export function ManualCallScreen() {
             </p>
           ) : null}
 
+          {restored && mode === null ? (
+            <p className={styles.hint}>{t('call.restored')}</p>
+          ) : null}
+
+          {restored && mode === null && entry === 'quick' && quickCode.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <p className={styles.hint}>{t('call.restoredRoom', { code: quickCode })}</p>
+              <Button variant="primary" fullWidth onClick={() => void beginQuickHost(quickCode)}>
+                {t('call.resumeRoom')}
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => hangup()}>
+                {t('call.cancel')}
+              </Button>
+            </div>
+          ) : null}
+
           {mode === null && entry === 'none' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <Button variant="primary" fullWidth onClick={() => setEntry('quick')}>
@@ -811,27 +877,28 @@ export function ManualCallScreen() {
               <Button variant="primary" fullWidth onClick={() => void beginQuickHost()}>
                 {t('call.createQuickRoom')}
               </Button>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input
-                  value={quickInput}
-                  onChange={(event) => setQuickInput(normalizeRoomCode(event.currentTarget.value))}
-                  placeholder={t('call.roomCodePlaceholder')}
-                  aria-label={t('call.roomCode')}
-                  style={{
-                    flex: 1,
-                    padding: '10px 12px',
-                    borderRadius: 10,
-                    border: '1px solid var(--color-border)',
-                    background: 'var(--color-bg-elevated)',
-                    fontFamily: 'var(--font-mono)',
-                    letterSpacing: '0.15em',
-                    textTransform: 'uppercase',
-                  }}
-                />
-                <Button variant="secondary" onClick={() => void beginQuickGuest()}>
-                  {t('call.joinQuickRoom')}
-                </Button>
-              </div>
+              <input
+                value={quickInput}
+                onChange={(event) => setQuickInput(normalizeRoomCode(event.currentTarget.value))}
+                placeholder={t('call.roomCodePlaceholder')}
+                aria-label={t('call.roomCode')}
+                style={{
+                  width: '100%',
+                  minWidth: 0,
+                  padding: '12px 14px',
+                  borderRadius: 10,
+                  border: '1px solid var(--color-border)',
+                  background: 'var(--color-bg-elevated)',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 'var(--text-lg)',
+                  letterSpacing: '0.2em',
+                  textAlign: 'center',
+                  textTransform: 'uppercase',
+                }}
+              />
+              <Button variant="secondary" fullWidth onClick={() => void beginQuickGuest()}>
+                {t('call.joinQuickRoom')}
+              </Button>
               <p className={styles.hint}>{t('call.sameBrowserHint')}</p>
               <Button variant="ghost" size="sm" onClick={() => setEntry('none')}>
                 {t('call.cancel')}
@@ -949,13 +1016,17 @@ export function ManualCallScreen() {
             label={t('call.dubbing')}
             description={t('call.dubbingHint')}
           />
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span className={styles.hint}>{t('translate.voice.label')}</span>
             <SegmentedControl
               label={t('translate.voice.label')}
-              value="auto"
-              options={[{ value: 'auto', label: t('translate.voice.auto') }]}
-              onChange={() => {}}
+              value={voiceMode}
+              options={[
+                { value: 'auto', label: t('translate.voice.auto') },
+                { value: 'female', label: t('translate.voice.female') },
+                { value: 'male', label: t('translate.voice.male') },
+              ]}
+              onChange={setVoiceMode}
             />
           </div>
           <StatusPill tone={translationState === 'idle' ? 'neutral' : 'success'}>

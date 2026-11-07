@@ -5,6 +5,7 @@ import {
   shareLinkForToken,
   validateToken,
 } from './token';
+import { parseHash } from '../router/url';
 
 describe('token helpers', () => {
   it('creates tokens with the pnc1_ prefix and a base64url payload', () => {
@@ -27,9 +28,10 @@ describe('token helpers', () => {
   it('builds and reads invite links through the URL hash', () => {
     const token = createMockToken();
     const link = shareLinkForToken(token, 'https://call.example/app');
-    expect(link).toContain('#token=');
+    expect(link).toContain('#/lobby?token=');
     const parsed = new URL(link);
-    expect(readTokenFromHash(parsed.hash)).toBe(token);
+    expect(parseHash(parsed.hash)?.params['token']).toBe(token);
+    expect(readTokenFromHash(`#token=${token}`)).toBe(token);
     expect(readTokenFromHash('')).toBeNull();
     expect(readTokenFromHash('#other=1')).toBeNull();
   });

@@ -24,6 +24,7 @@ import {
 import { startMicPitchTracker } from '../translation/pitch-tracker';
 import type { PitchTracker } from '../translation/pitch-tracker';
 import { otherLanguage } from '../translation/languages';
+import { loadSession, saveSession } from '../storage/session';
 
 const STAGES = ['asr', 'mt', 'tts', 'e2e'] as const;
 const STAGE_LABELS: Record<(typeof STAGES)[number], MessageKey> = {
@@ -34,6 +35,39 @@ const STAGE_LABELS: Record<(typeof STAGES)[number], MessageKey> = {
 };
 
 type VoiceMode = 'auto' | 'female' | 'male';
+
+type DemoSnapshot = {
+  source: Language;
+  target: Language;
+  dubbing: boolean;
+  voiceMode: VoiceMode;
+};
+
+const DEMO_SESSION_KEY = 'linguacall.translate-demo';
+
+function readDemoSnapshot(nativeLanguage: Language): DemoSnapshot {
+  const fallback: DemoSnapshot = {
+    source: otherLanguage(nativeLanguage),
+    target: nativeLanguage,
+    dubbing: true,
+    voiceMode: 'auto',
+  };
+  return (
+    loadSession<DemoSnapshot>(DEMO_SESSION_KEY, (value) => {
+      if (typeof value !== 'object' || value === null) return null;
+      const record = value as Record<string, unknown>;
+      const source = record['source'];
+      const target = record['target'];
+      const dubbing = record['dubbing'];
+      const voiceMode = record['voiceMode'];
+      if (source !== 'ru' && source !== 'en') return null;
+      if (target !== 'ru' && target !== 'en') return null;
+      if (typeof dubbing !== 'boolean') return null;
+      if (voiceMode !== 'auto' && voiceMode !== 'female' && voiceMode !== 'male') return null;
+      return { source, target, dubbing, voiceMode };
+    }) ?? fallback
+  );
+}
 
 const GENDER_LABELS: Record<VoiceGender, MessageKey> = {
   male: 'translate.voice.male',
@@ -68,10 +102,11 @@ export function TranslateDemoScreen() {
   const ttsSupported = useMemo(() => isWebSpeechTtsSupported(), []);
   const canStart = asrSupported && mtSupported;
 
-  const [source, setSource] = useState<Language>(otherLanguage(nativeLanguage));
-  const [target, setTarget] = useState<Language>(nativeLanguage);
-  const [dubbing, setDubbing] = useState(true);
-  const [voiceMode, setVoiceMode] = useState<VoiceMode>('auto');
+  const initialDemo = readDemoSnapshot(nativeLanguage);
+  const [source, setSource] = useState<Language>(initialDemo.source);
+  const [target, setTarget] = useState<Language>(initialDemo.target);
+  const [dubbing, setDubbing] = useState(initialDemo.dubbing);
+  const [voiceMode, setVoiceMode] = useState<VoiceMode>(initialDemo.voiceMode);
   const [detectedGender, setDetectedGender] = useState<VoiceGender>('unknown');
   const [status, setStatus] = useState<PipelineState>('idle');
   const [partial, setPartial] = useState('');
@@ -84,6 +119,10 @@ export function TranslateDemoScreen() {
   const detectedGenderRef = useRef<VoiceGender>('unknown');
   const latencyRef = useRef<LatencyRecorder>(new LatencyRecorder());
   const running = status !== 'idle';
+
+  useEffect(() => {
+    saveSession(DEMO_SESSION_KEY, { source, target, dubbing, voiceMode } satisfies DemoSnapshot);
+  }, [source, target, dubbing, voiceMode]);
 
   useEffect(() => {
     return () => {

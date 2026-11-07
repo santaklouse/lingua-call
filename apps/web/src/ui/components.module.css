@@ -5,13 +5,17 @@
   justify-content: center;
   gap: var(--space-2);
   min-height: var(--tap-min);
-  padding: 0 var(--space-5);
+  padding: var(--space-2) var(--space-5);
   border: 1px solid transparent;
   border-radius: var(--radius-full);
   font-size: var(--text-md);
   font-weight: 600;
-  line-height: var(--line-tight);
-  white-space: nowrap;
+  line-height: 1.25;
+  text-align: center;
+  /* Long labels (e.g. "Quick test in this browser") must wrap inside widgets
+     instead of being clipped by the panel edge. */
+  white-space: normal;
+  overflow-wrap: anywhere;
   transition:
     background-color var(--motion-fast) var(--ease-standard),
     border-color var(--motion-fast) var(--ease-standard),
@@ -68,7 +72,7 @@
 
 .sm {
   min-height: 32px;
-  padding: 0 var(--space-3);
+  padding: var(--space-1) var(--space-3);
   font-size: var(--text-sm);
 }
 
@@ -78,12 +82,13 @@
 
 .lg {
   min-height: 52px;
-  padding: 0 var(--space-6);
+  padding: var(--space-2) var(--space-6);
   font-size: var(--text-lg);
 }
 
 .fullWidth {
   width: 100%;
+  min-width: 0;
 }
 
 /* ---------- IconButton ---------- */
@@ -332,6 +337,8 @@
 /* ---------- SegmentedControl ---------- */
 .segmented {
   display: inline-flex;
+  flex-wrap: wrap;
+  max-width: 100%;
   padding: 3px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
@@ -340,7 +347,10 @@
 }
 
 .segment {
+  flex: 1 1 auto;
+  min-width: 0;
   min-height: 34px;
+  white-space: normal;
   padding: 0 var(--space-4);
   border: 0;
   border-radius: var(--radius-full);
@@ -490,6 +500,10 @@
 
 /* ---------- Widget / sidebar ---------- */
 .widget {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 0 0 auto;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
@@ -498,6 +512,7 @@
 
 .widgetHeader {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
   min-height: 44px;
@@ -508,7 +523,8 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
   min-height: 44px;
   padding: 0;
   border: 0;
@@ -531,6 +547,8 @@
 }
 
 .widgetTitle {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: var(--text-sm);
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -549,6 +567,7 @@
 
 .widgetActions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-1);
 }
@@ -558,4 +577,16 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  min-width: 0;
+}
+
+.widgetBody > * {
+  min-width: 0;
+}
+
+.widgetBody input,
+.widgetBody select,
+.widgetBody textarea {
+  min-width: 0;
+  max-width: 100%;
 }

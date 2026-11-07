@@ -45,3 +45,6 @@ pnpm-debug.log*
 
 # Docker
 .env
+
+# Local screenshots
+artifacts/

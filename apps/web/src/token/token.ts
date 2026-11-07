@@ -41,7 +41,9 @@ export const MOCK_TOKEN_PAYLOAD_LENGTH = TOKEN_PAYLOAD_LENGTH;
 
 export function shareLinkForToken(token: string, href: string): string {
   const url = new URL(href);
-  url.hash = `token=${encodeURIComponent(token)}`;
+  // Hash route + token stay in the fragment (never sent to the server) and a
+  // refresh re-opens the lobby with the invite ready to copy.
+  url.hash = `/lobby?token=${encodeURIComponent(token)}`;
   return url.toString();
 }
 

@@ -10,6 +10,7 @@ function enterEnglish() {
 
 beforeEach(() => {
   window.localStorage.clear();
+  window.sessionStorage.clear();
   window.location.hash = '';
 });
 
@@ -25,7 +26,7 @@ describe('lobby screen', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create a chat' }));
 
     expect(screen.getByDisplayValue(/^pnc1_/)).toBeTruthy();
-    expect(screen.getByDisplayValue(/#token=/)).toBeTruthy();
+    expect(screen.getByDisplayValue(/#\/lobby\?token=/)).toBeTruthy();
     expect(screen.getByText('Waiting for the other participant…')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));

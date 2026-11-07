@@ -1,7 +1,13 @@
-import { afterEach, describe, expect, it } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import { cleanup, render, screen } from '@testing-library/react';
 import { RouterProvider } from '../router/context';
 import { TranslateDemoScreen } from './TranslateDemoScreen';
+
+beforeEach(() => {
+  window.localStorage.clear();
+  window.sessionStorage.clear();
+  window.location.hash = '';
+});
 
 afterEach(cleanup);
 
