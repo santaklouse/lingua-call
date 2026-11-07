@@ -1,5 +1,6 @@
 import { Button, Card, ScreenShell, StatusPill } from './ui';
 import { LanguageScreen } from './screens/LanguageScreen';
+import { LobbyScreen } from './screens/LobbyScreen';
 import { RouterProvider, useRouter } from './router/context';
 import type { Screen } from './router/state';
 
@@ -92,6 +93,7 @@ function ScreenStub() {
 function CurrentScreen() {
   const { state } = useRouter();
   if (state.screen === 'language') return <LanguageScreen />;
+  if (state.screen === 'lobby') return <LobbyScreen />;
   return <ScreenStub />;
 }
 

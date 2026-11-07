@@ -1,5 +1,5 @@
-// @vitest-environment jsdom
-import { describe, expect, it, mock } from 'bun:test';
+import { afterEach, describe, expect, it, mock } from 'bun:test';
+import { cleanup } from '@testing-library/react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { Button } from './Button';
 import { Switch } from './Switch';
@@ -44,3 +44,5 @@ describe('TextField', () => {
     expect(screen.getByText('Starts with pnc1_')).toBeTruthy();
   });
 });
+
+afterEach(cleanup);

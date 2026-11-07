@@ -1,9 +1,9 @@
-// @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'bun:test';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { App } from '../App';
 
 afterEach(() => {
+  cleanup();
   window.localStorage.clear();
 });
 
@@ -18,7 +18,7 @@ describe('language screen', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
 
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('2. Create or join a chat');
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Начать звонок');
     expect(window.localStorage.getItem('linguacall.language')).toBe('ru');
   });
 
