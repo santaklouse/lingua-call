@@ -15,8 +15,8 @@
 >   used (D18).
 > - **Documentation policy:** English is primary; Russian mirrors are kept as
 >   `*.RU.md` (D21). All code comments are English.
-> - Version: `v1.0` · Last update: **2026-11-07**
-> - **Next step: P5P-01** (translation engine interfaces + capability manifest).
+> - Version: `v1.1` · Last update: **2026-11-07**
+> - **Next step: P5P-02** (mic capture + energy VAD segmenter), then P5P-03 (Web Speech ASR).
 
 ---
 
@@ -357,7 +357,7 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 
 | ID | Status | Task | Depends | DoD |
 |---|---|---|---|---|
-| P5P-01 | ☐ TODO | `packages/translation`: `AsrEngine`/`MtEngine`/`TtsEngine` interfaces, capability manifest, latency types | — | unit tests for contracts |
+| P5P-01 | ✅ DONE (2026-11-07, daf2841) | `packages/translation`: `AsrEngine`/`MtEngine`/`TtsEngine` interfaces, capability manifest, latency types | — | unit tests for contracts |
 | P5P-02 | ☐ TODO | Mic capture + energy VAD segmenter (WebAudio, testable pure logic) | P5P-01 | segmenter unit tests |
 | P5P-03 | ☐ TODO | Web Speech ASR adapter (partial/final, feature detection, errors) | P5P-01 | works in Chrome/Edge; fallback message |
 | P5P-04 | ☐ TODO | Chrome Translator API MT adapter + fallback path | P5P-01 | ru↔en translation in Chrome/Edge |
@@ -423,10 +423,10 @@ Statuses: `☐ TODO`, `▶ DOING`, `✅ DONE`, `⛔ BLOCKED`.
 
 **Now:** translation-first course (D19). UI shell with language selection and
 lobby (mock tokens) is done; a temporary manual-WebRTC call (copyable SDP codes)
-works for audio/video. Docs are English-primary with Russian mirrors. Next step
-is the core feature: **P5P-01** (translation engine interfaces), then the prototype
-pipeline (Web Speech ASR → Chrome Translator → Web Speech TTS) with latency
-metrics.
+works for audio/video. Docs are English-primary with Russian mirrors. The
+translation package skeleton (P5P-01) is in place. Next step is the core feature
+pipeline: **P5P-02** (mic capture + VAD), then prototype engines (Web Speech ASR →
+Chrome Translator → Web Speech TTS) with latency metrics.
 
 **Done:**
 - 2026-11-07 — research: `go-p2p-netcat` has no media tracks; data channel is
@@ -440,8 +440,10 @@ metrics.
 - 2026-11-07 — P2S-01…P2S-04 complete: manual-WebRTC audio/video transport
   (`LC1.` SDP codes), temporary call screen, lobby entry.
 - 2026-11-07 — docs converted to English-primary with `*.RU.md` mirrors (D21).
+- 2026-11-07 — P5P-01 complete: `@linguacall/translation` with engine interfaces,
+  segment/latency types and the ru/en capability manifest (32 tests green).
 
-**Next step:** P5P-01 → P5P-02 → … (see §0).
+**Next step:** P5P-02 → P5P-03 → … (see §0).
 
 **Known issues / blockers:**
 - Manual transport has no reconnect and fails on symmetric NAT (acceptable for
@@ -469,7 +471,8 @@ Format: `YYYY-MM-DD · author · what was done · next step`.
   English-primary (D21). Added P2S and P5P phases.
 - **2026-11-07 · lead** — P2S-01…P2S-04 complete: manual-WebRTC transport and
   call screen; 29 tests. English README/AGENTS/docs written with RU mirrors.
-  Next: P5P-01 (translation engine interfaces).
+- **2026-11-07 · lead** — P5P-01 complete: translation engine interfaces,
+  segment/latency types, capability manifest; 32 tests. Next: P5P-02 (VAD).
 
 ---
 
